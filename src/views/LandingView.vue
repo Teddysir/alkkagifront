@@ -4,10 +4,11 @@ import { ref, onMounted, computed } from 'vue'
 const showUI = ref(false)
 const showTree = ref(false)
 const showEditor = ref(true)
+const promptText = ref('')
 
 // Config
 const SNOW_COUNT = 50
-const TREE_WIDTH = 21 // odd number for symmetry (From User Snippet)
+const TREE_WIDTH = 21 
 
 // VS Code Animation State
 const codeLines = [
@@ -31,7 +32,6 @@ const currentLineIndex = ref(0)
 const currentCharIndex = ref(0)
 
 // 0: transparent, 1: green, 2: red (ornament), 3: white (light/snow), 4: brown, 5: star
-// (From User Snippet)
 const rawMap = [
   "000000000050000000000", // Star
   "000000000111000000000",
@@ -67,16 +67,12 @@ const pixels = computed(() => {
   rawMap.forEach((rowStr, rowIndex) => {
     const row = rowStr.split('').map(Number)
     row.forEach((type, colIndex) => {
-      // Calculate random start position for scatter effect (Keeping consistent structure but scatter unused for intro now)
-      // Actually we don't need scatter positions if we just POP in.
-      // But let's keep the structure simple.
-      const isVisible = type !== 0
-      result.push({ type, isVisible })
+      // Keep empty pixels for grid structure
+      result.push({ type })
     })
   })
   return result
 })
-const activePixels = computed(() => pixels.value.filter(p => p.isVisible))
 
 const snowflakes = Array.from({ length: SNOW_COUNT }).map(() => ({
   style: {
@@ -99,7 +95,7 @@ const typeCode = () => {
       setTimeout(() => {
         showTree.value = true
         showUI.value = true
-      }, 500) // Small delay before pop
+      }, 500) 
     }, 800)
     return
   }
@@ -124,7 +120,6 @@ const typeCode = () => {
 }
 
 const getPixelClass = (type) => {
-  // Logic from User Snippet
   switch (type) {
     case 1: return 'bg-green-600 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.3)]'
     case 2: return 'bg-red-500 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.3)]'
@@ -135,7 +130,6 @@ const getPixelClass = (type) => {
   }
 }
 
-// Helper for shine effect on tree pixels
 const getExtraClasses = (type) => {
   if ([1,2,3].includes(type)) return 'animate-shine'
   return ''
@@ -155,14 +149,11 @@ const getExtraClasses = (type) => {
               :key="idx" 
               class="flex"
             >
-              <!-- Line Number -->
               <span class="text-gray-600 mr-4 w-6 text-right select-none">{{ idx + 1 }}</span>
-              <!-- Code Content -->
               <div 
                 class="whitespace-pre"
                 :style="{ paddingLeft: `${line.indent * 1.5}rem` }"
               >
-                <!-- Simple syntax highlights -->
                 <span class="text-[#9cdcfe] font-medium">{{ line.text }}</span>
                 <span v-if="idx === displayedLines.length - 1" class="animate-pulse bg-white w-2 h-5 inline-block align-middle ml-1"></span>
               </div>
@@ -195,24 +186,50 @@ const getExtraClasses = (type) => {
       </nav>
     </transition>
 
-    <!-- Pixel Tree Container -->
-    <!-- Large Scale + Fade In Animation (Gradient Effect) -->
+    <!-- Center Content: Tree & Input -->
+    <!-- Full screen container to allow absolute positioning of Input -->
     <transition name="fade-slow">
-      <div v-if="showTree" class="relative z-10 scale-[2.2] md:scale-[2.6]"> <!-- Static larger scale -->
-        <div 
-          class="grid"
-          :style="{ 
-            gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`,
-            gap: '1px'
-          }"
-        >
-          <div 
-            v-for="(pixel, i) in pixels" 
-            :key="i"
-            class="w-2 h-2" 
-            :class="[getPixelClass(pixel.type), getExtraClasses(pixel.type)]"
-          ></div>
+      <div v-if="showTree" class="absolute inset-0 z-10">
+        
+        <!-- Tree Container: Centered -->
+        <div class="h-full flex flex-col items-center justify-center pb-20"> <!-- pb-20 to offset input space -->
+          <div class="relative scale-[2.2] md:scale-[2.6]">
+            <div 
+              class="grid"
+              :style="{ 
+                gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`,
+                gap: '1px'
+              }"
+            >
+              <div 
+                v-for="(pixel, i) in pixels" 
+                :key="i"
+                class="w-2 h-2" 
+                :class="[getPixelClass(pixel.type), getExtraClasses(pixel.type)]"
+              ></div>
+            </div>
+          </div>
         </div>
+
+        <!-- Prompt Input: Fixed at Bottom -->
+        <div class="absolute bottom-[8vh] left-0 w-full flex justify-center px-4">
+          <div class="w-full max-w-3xl">
+            <!-- Pixelated Container with Stepped Corners -->
+            <div class="relative bg-zinc-900 h-16 flex items-center px-6 pixel-box transition-all duration-300 hover:bg-zinc-800">
+              <span class="text-gray-400 mr-4 text-2xl font-mono">+</span>
+              <input 
+                v-model="promptText"
+                type="text" 
+                placeholder="무엇이든 물어보세요"
+                class="bg-transparent text-white placeholder-gray-500 flex-1 outline-none font-mono text-base md:text-lg tracking-widest" 
+              />
+              <button class="w-10 h-10 flex items-center justify-center bg-zinc-200 hover:bg-white transition-colors pixel-btn disabled:opacity-50 ml-2">
+                 <span class="text-black font-bold text-xl leading-none">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </transition>
     
@@ -223,6 +240,40 @@ const getExtraClasses = (type) => {
 .pixel-font {
   font-family: 'Courier New', Courier, monospace;
   text-shadow: 2px 2px 0px #4ade80, -2px -2px 0px #f87171;
+}
+
+.pixel-box {
+  position: relative;
+  background-color: #18181b;
+
+  /* 픽셀 보더 */
+  box-shadow:
+    0 0 0 4px #fff,
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    inset 2px 2px 0 rgba(255,255,255,0.05);
+
+  /* 도트식 모서리 */
+  clip-path: polygon(
+    8px 0%, 
+    calc(100% - 8px) 0%, 
+    100% 8px, 
+    100% calc(100% - 8px), 
+    calc(100% - 8px) 100%, 
+    8px 100%, 
+    0% calc(100% - 8px), 
+    0% 8px
+  );
+}
+
+
+/* For Button */
+.pixel-btn {
+  box-shadow: 
+    -2px 0 0 0 #000,
+    2px 0 0 0 #000,
+    0 -2px 0 0 #000,
+    0 2px 0 0 #000;
+  margin: 2px;
 }
 
 /* Shine / Twinkle Animation */
