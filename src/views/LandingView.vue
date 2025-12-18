@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const showUI = ref(false)
 const showTree = ref(false)
@@ -14,22 +15,39 @@ const promptText = ref('')
 const SNOW_COUNT = 50
 const TREE_WIDTH = 21
 
-// VS Code Animation State
-const codeLines = [
-  { text: "const christmas = new Holiday('Winter');", indent: 0 },
-  { text: "const tree = new Tree({", indent: 0 },
-  { text: "  type: 'Evergreen',", indent: 1 },
-  { text: "  height: 'Tall',", indent: 1 },
-  { text: "  decoration: true", indent: 1 },
-  { text: "});", indent: 0 },
-  { text: "", indent: 0 },
-  { text: "tree.addLights({", indent: 0 },
-  { text: "  color: 'Multi',", indent: 1 },
-  { text: "  mode: 'Twinkle'", indent: 1 },
-  { text: "});", indent: 0 },
-  { text: "", indent: 0 },
-  { text: "await tree.build();", indent: 0 },
-]
+// Animation State
+const codeLines = ref([])
+
+const initCodeLines = () => {
+  if (authStore.isAuthenticated) {
+    const nick = authStore.user?.nickname || 'Hero'
+    codeLines.value = [
+      { text: `const hero = new Hero('${nick}');`, indent: 0 },
+      { text: "", indent: 0 },
+      { text: "hero.greet();", indent: 0 },
+      { text: `// Welcome, ${nick}!`, indent: 0 },
+      { text: "", indent: 0 },
+      { text: "await hero.startAdventure();", indent: 0 },
+      { text: "// Have a nice day!", indent: 0 },
+    ]
+  } else {
+    codeLines.value = [
+      { text: "const christmas = new Holiday('Winter');", indent: 0 },
+      { text: "const tree = new Tree({", indent: 0 },
+      { text: "  type: 'Evergreen',", indent: 1 },
+      { text: "  height: 'Tall',", indent: 1 },
+      { text: "  decoration: true", indent: 1 },
+      { text: "});", indent: 0 },
+      { text: "", indent: 0 },
+      { text: "tree.addLights({", indent: 0 },
+      { text: "  color: 'Multi',", indent: 1 },
+      { text: "  mode: 'Twinkle'", indent: 1 },
+      { text: "});", indent: 0 },
+      { text: "", indent: 0 },
+      { text: "await tree.build();", indent: 0 },
+    ]
+  }
+}
 
 const displayedLines = ref([])
 const currentLineIndex = ref(0)
@@ -88,11 +106,21 @@ const snowflakes = Array.from({ length: SNOW_COUNT }).map(() => ({
 }))
 
 onMounted(() => {
+  initCodeLines()
   typeCode()
 })
 
+const skipAnimation = () => {
+  // Immediately finish animation
+  showEditor.value = false
+  showTree.value = true
+  showUI.value = true
+}
+
 const typeCode = () => {
-  if (currentLineIndex.value >= codeLines.length) {
+  if (!showEditor.value) return // Stop if skipped
+
+  if (currentLineIndex.value >= codeLines.value.length) {
     // Finished typing
     setTimeout(() => {
       showEditor.value = false
@@ -104,7 +132,7 @@ const typeCode = () => {
     return
   }
 
-  const targetLine = codeLines[currentLineIndex.value]
+  const targetLine = codeLines.value[currentLineIndex.value]
 
   if (displayedLines.value.length <= currentLineIndex.value) {
     displayedLines.value.push({ text: '', indent: targetLine.indent })
@@ -138,6 +166,15 @@ const getExtraClasses = (type) => {
   if ([1, 2, 3].includes(type)) return 'animate-shine'
   return ''
 }
+
+const goToCampaign = () => {
+  if (authStore.isAuthenticated) {
+    router.push('/campaigns')
+  } else {
+    alert('로그인이 필요한 서비스입니다.') // Optional protection
+    router.push('/login')
+  }
+}
 </script>
 
 <template>
@@ -147,7 +184,8 @@ const getExtraClasses = (type) => {
     <!-- VS Code Editor Container -->
     <transition name="fade-editor">
       <div v-if="showEditor" class="absolute inset-0 z-30 flex items-center justify-center bg-[#1e1e1e]">
-        <div class="w-full max-w-2xl p-6 rounded-lg font-mono text-sm md:text-lg leading-relaxed text-gray-300">
+        <div
+          class="w-full max-w-2xl p-6 rounded-lg font-mono text-sm md:text-lg leading-relaxed text-gray-300 relative group">
           <div class="flex flex-col gap-1">
             <div v-for="(line, idx) in displayedLines" :key="idx" class="flex">
               <span class="text-gray-600 mr-4 w-6 text-right select-none">{{ idx + 1 }}</span>
@@ -158,6 +196,12 @@ const getExtraClasses = (type) => {
               </div>
             </div>
           </div>
+
+          <!-- SKIP Button -->
+          <button @click="skipAnimation"
+            class="absolute bottom-[-50px] right-0 text-gray-500 hover:text-white transition-colors tracking-widest text-sm font-bold animate-pulse">
+            SKIP >
+          </button>
         </div>
       </div>
     </transition>
@@ -203,7 +247,9 @@ const getExtraClasses = (type) => {
 
         <!-- Tree Container: Centered -->
         <div class="h-full flex flex-col items-center justify-center pb-20"> <!-- pb-20 to offset input space -->
-          <div class="relative scale-[2.2] md:scale-[2.6]">
+          <div @click="goToCampaign"
+            class="relative scale-[2.2] md:scale-[2.6] cursor-pointer hover:scale-110 transition-transform duration-300"
+            title="Start Adventure">
             <div class="grid" :style="{
               gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`,
               gap: '1px'
