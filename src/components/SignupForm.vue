@@ -19,11 +19,17 @@ const errorMessage = ref('')
 const handleCheckEmail = async () => {
   if (!email.value) return
   try {
-    await checkEmail(email.value)
-    isEmailChecked.value = true
-    alert('사용 가능한 이메일입니다.')
+    const res = await checkEmail(email.value)
+    if (res.data && res.data.isAvailable) {
+        isEmailChecked.value = true
+        alert('사용 가능한 이메일입니다.')
+    } else {
+        alert('이미 사용중인 이메일입니다.')
+        isEmailChecked.value = false
+    }
   } catch (e) {
-    alert('이미 사용중인 이메일입니다.')
+    console.error(e)
+    alert('확인 중 오류가 발생했습니다.')
     isEmailChecked.value = false
   }
 }
@@ -31,11 +37,17 @@ const handleCheckEmail = async () => {
 const handleCheckNickname = async () => {
   if (!nickname.value) return
   try {
-    await checkNickname(nickname.value)
-    isNicknameChecked.value = true
-    alert('사용 가능한 닉네임입니다.')
+    const res = await checkNickname(nickname.value)
+    if (res.data && res.data.isAvailable) {
+        isNicknameChecked.value = true
+        alert('사용 가능한 닉네임입니다.')
+    } else {
+        alert('이미 사용중인 닉네임입니다.')
+        isNicknameChecked.value = false
+    }
   } catch (e) {
-    alert('이미 사용중인 닉네임입니다.')
+    console.error(e)
+    alert('확인 중 오류가 발생했습니다.')
     isNicknameChecked.value = false
   }
 }
@@ -66,7 +78,7 @@ const handleSignup = async () => {
       nickname: nickname.value,
       password: password.value
     })
-    alert('하온 가입 성공! 로그인해주세요.')
+    alert('용사로 전직 성공! 로그인해주세요.')
     emit('success')
   } catch (error) {
     console.error(error)

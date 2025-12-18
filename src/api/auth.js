@@ -12,13 +12,13 @@ export const signup = async (userData) => {
 }
 
 export const checkEmail = async (email) => {
-    // Assuming GET or POST for check. Adjust based on actual backend API.
-    // Common pattern: GET /users/check-email?email=...
-    const response = await axios.get(`/users/check-email`, { params: { email } })
+    // Post request for duplicate check: /users/check/emails
+    const response = await axios.post(`/users/check/emails`, { email })
     return response.data
 }
 
 export const checkNickname = async (nickname) => {
-    const response = await axios.get(`/users/check-nickname`, { params: { nickname } })
+    // Post request for duplicate check: /users/check/nicknames
+    const response = await axios.post(`/users/check/nicknames`, { nickname })
     return response.data
 }

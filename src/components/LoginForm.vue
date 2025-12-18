@@ -3,13 +3,14 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PixelInput from '@/components/PixelInput.vue'
 import PixelButton from '@/components/PixelButton.vue'
-import { login } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const errorMessage = ref('')
 const router = useRouter()
+const authStore = useAuthStore()
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
@@ -21,19 +22,9 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    const response = await login(email.value, password.value);
-    
-    // HTTP 응답 헤더에서 토큰 추출
-    const token = response.headers['authorization']; 
-    
-    if (token) {
-      // 만약 토큰에 "Bearer " 접두사가 붙어있다면 제거하고 저장하는 것이 좋습니다.
-      const cleanToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
-      
-      localStorage.setItem('Authorization', cleanToken); // 키 이름 대소문자 주의!
-      router.push('/');
-    } else {
-      errorMessage.value = '헤더에서 토큰을 찾을 수 없습니다.';
+    const success = await authStore.login(email.value, password.value)
+    if (success) {
+      router.push('/')
     }
   } catch (error) {
     console.error(error)
