@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .pixel-font {
+    font-family: 'Courier New', Courier, monospace;
+    text-shadow: 2px 2px 0px #4ade80, -2px -2px 0px #f87171;
+  }
+
+  .pixel-box {
+    position: relative;
+    background-color: #18181b;
+    box-shadow:
+      0 0 0 4px #fff,
+      inset -2px -2px 0 rgba(0,0,0,0.6),
+      inset 2px 2px 0 rgba(255,255,255,0.05);
+    clip-path: polygon(
+      8px 0%, 
+      calc(100% - 8px) 0%, 
+      100% 8px, 
+      100% calc(100% - 8px), 
+      calc(100% - 8px) 100%, 
+      8px 100%, 
+      0% calc(100% - 8px), 
+      0% 8px
+    );
+  }
+
+  .pixel-btn {
+    box-shadow: 
+      -2px 0 0 0 #000,
+      2px 0 0 0 #000,
+      0 -2px 0 0 #000,
+      0 2px 0 0 #000;
+  }
+}
+
+@keyframes shine {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.4) drop-shadow(0 0 2px rgba(255,255,255,0.8)); }
+}
+
+.animate-shine {
+  animation: shine 3s infinite ease-in-out;
+}

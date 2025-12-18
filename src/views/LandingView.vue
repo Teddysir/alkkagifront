@@ -180,8 +180,8 @@ const getExtraClasses = (type) => {
           Alkkagi
         </div>
         <div class="flex gap-6">
-          <a href="#" class="text-white hover:text-green-400 transition-colors uppercase tracking-widest text-xs md:text-sm">Login</a>
-          <a href="#" class="text-white hover:text-red-400 transition-colors uppercase tracking-widest text-xs md:text-sm">Sign Up</a>
+          <RouterLink to="/login" class="text-white hover:text-green-400 transition-colors uppercase tracking-widest text-xs md:text-sm no-underline">Login</RouterLink>
+          <RouterLink to="/login" class="text-white hover:text-red-400 transition-colors uppercase tracking-widest text-xs md:text-sm no-underline">Sign Up</RouterLink>
         </div>
       </nav>
     </transition>
@@ -237,55 +237,6 @@ const getExtraClasses = (type) => {
 </template>
 
 <style scoped>
-.pixel-font {
-  font-family: 'Courier New', Courier, monospace;
-  text-shadow: 2px 2px 0px #4ade80, -2px -2px 0px #f87171;
-}
-
-.pixel-box {
-  position: relative;
-  background-color: #18181b;
-
-  /* 픽셀 보더 */
-  box-shadow:
-    0 0 0 4px #fff,
-    inset -2px -2px 0 rgba(0,0,0,0.6),
-    inset 2px 2px 0 rgba(255,255,255,0.05);
-
-  /* 도트식 모서리 */
-  clip-path: polygon(
-    8px 0%, 
-    calc(100% - 8px) 0%, 
-    100% 8px, 
-    100% calc(100% - 8px), 
-    calc(100% - 8px) 100%, 
-    8px 100%, 
-    0% calc(100% - 8px), 
-    0% 8px
-  );
-}
-
-
-/* For Button */
-.pixel-btn {
-  box-shadow: 
-    -2px 0 0 0 #000,
-    2px 0 0 0 #000,
-    0 -2px 0 0 #000,
-    0 2px 0 0 #000;
-  margin: 2px;
-}
-
-/* Shine / Twinkle Animation */
-@keyframes shine {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.4) drop-shadow(0 0 2px rgba(255,255,255,0.8)); }
-}
-
-.animate-shine {
-  animation: shine 3s infinite ease-in-out;
-}
-
 /* Snow Animation */
 @keyframes fall {
   0% { transform: translateY(0); }
