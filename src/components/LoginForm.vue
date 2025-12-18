@@ -21,15 +21,19 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    const data = await login(email.value, password.value)
-    // Assuming response contains accessToken. Adjust based on actual API response structure.
-    const token = data.accessToken || data.token
+    const response = await login(email.value, password.value);
+    
+    // HTTP 응답 헤더에서 토큰 추출
+    const token = response.headers['authorization']; 
+    
     if (token) {
-      localStorage.setItem('accessToken', token)
-      // Navigate to main/home after success (currently home is landing, maybe change later)
-      router.push('/')
+      // 만약 토큰에 "Bearer " 접두사가 붙어있다면 제거하고 저장하는 것이 좋습니다.
+      const cleanToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
+      
+      localStorage.setItem('Authorization', cleanToken); // 키 이름 대소문자 주의!
+      router.push('/');
     } else {
-      errorMessage.value = '토큰을 받아오지 못했습니다.'
+      errorMessage.value = '헤더에서 토큰을 찾을 수 없습니다.';
     }
   } catch (error) {
     console.error(error)
