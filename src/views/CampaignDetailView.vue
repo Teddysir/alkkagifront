@@ -2,8 +2,8 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem } from '@/api/campaign'
-import { useAuthStore } from '@/api/stores'
+import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem, joinCampaign, withdrawCampaign } from '@/api/campaign'
+import { useAuthStore } from '@/stores/auth'
 import CommonHeader from '@/components/CommonHeader.vue'
 import PixelText from '@/components/PixelText.vue'
 
@@ -138,6 +138,32 @@ const handleSearch = async () => {
     }
 }
 
+// --- Join & Withdraw ---
+const handleJoin = async () => {
+    if (!confirm('JOIN THIS CAMPAIGN?')) return
+    try {
+        await joinCampaign(campaignId)
+        alert('WELCOME TO THE CAMPAIGN')
+        fetchData()
+    } catch (e) {
+        console.error(e)
+        const msg = e.response?.data?.message || 'FAILED TO JOIN'
+        alert(msg)
+    }
+}
+
+const handleWithdraw = async () => {
+    if (!confirm('WARNING: WITHDRAW FROM CAMPAIGN?')) return
+    try {
+        await withdrawCampaign(campaignId)
+        alert('WITHDRAWAL COMPLETE')
+        fetchData()
+    } catch (e) {
+        console.error(e)
+        alert('FAILED TO WITHDRAW')
+    }
+}
+
 const toggleSelectProblem = (problem) => {
     const targetId = problem.id
     const idx = newProblems.value.findIndex(p => p.id === targetId)
@@ -180,8 +206,8 @@ const submitAddProblems = async () => {
     const payload = {
         problems: newProblems.value.map(p => ({
             problemId: p.id,
-            startDate: newProblemDates.value[p.id].startDate + ':00', // Ensure seconds are added if backend needs standard ISO
-            endDate: newProblemDates.value[p.id].endDate + ':59'
+            startDate: newProblemDates.value[p.id].startDate, // Ensure seconds are added if backend needs standard ISO
+            endDate: newProblemDates.value[p.id].endDate
         }))
     }
 
@@ -328,11 +354,27 @@ watch(problems, async () => {
                         </div>
 
                         <!-- Admin Action -->
-                        <div v-if="authStore.isAdmin" class="mt-2">
-                            <button @click="showAddModal = true"
+                        <div class="mt-2 flex justify-end gap-2">
+                            <!-- Admin Add -->
+                            <button v-if="authStore.isAdmin" @click="showAddModal = true"
                                 class="px-4 py-2 border-2 border-purple-500 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white transition-all text-xs font-bold">
                                 <PixelText>[ + ADMIN: ADD STAGE ]</PixelText>
                             </button>
+
+                            <!-- User Join/Withdraw -->
+                            <template v-else-if="campaign">
+                                <!-- Withdraw Button (If Joined) -->
+                                DEBUG: isParticipated = {{ campaign.isParticipated }}
+                                <button v-if="campaign.isParticipated" @click="handleWithdraw"
+                                    class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
+                                    <PixelText>[ WITHDRAW ]</PixelText>
+                                </button>
+                                <!-- Join Button (If Not Joined & Future Start) -->
+                                <button v-else-if="new Date() < new Date(campaign.startDate)" @click="handleJoin"
+                                    class="px-4 py-2 border-2 border-green-500 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white transition-all text-xs font-bold animate-pulse">
+                                    <PixelText>>> JOIN MISSION &lt;&lt;</PixelText>
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -541,7 +583,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -603,7 +645,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

@@ -44,3 +44,15 @@ export const deleteCampaignProblem = async (campaignId, problemId) => {
     const response = await axios.delete(`/campaigns/${campaignId}/problems/${problemId}`)
     return response.data
 }
+
+export const joinCampaign = async (campaignId) => {
+    // GET /campaigns/join/{campaignId}
+    const response = await axios.get(`/campaigns/join/${campaignId}`)
+    return response.data
+}
+
+export const withdrawCampaign = async (campaignId) => {
+    // DELETE /campaigns/withdraw/{campaignId}
+    const response = await axios.delete(`/campaigns/withdraw/${campaignId}`)
+    return response.data
+}
