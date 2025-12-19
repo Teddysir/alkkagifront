@@ -61,7 +61,7 @@ const formatDate = (dateString) => {
     <div class="pixel-card flex flex-col w-full h-[340px] bg-[#0c0c0c] border-[2px] border-white/20 box-border transition-all duration-300 group relative overflow-hidden rounded-sm"
         :class="cardClasses">
 
-        <div class="h-7 flex items-center justify-between px-3 bg-white/5 border-b border-white/10 z-30">
+        <div class="h-7 flex items-center justify-between px-3 bg-white/5 border-b border-white/10 z-30 relative">
             <div class="flex items-center gap-2">
                 <div class="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" :class="{ 'animate-ping': status === 'open' }"></div>
                 <span class="game-font text-[10px] text-white/50 tracking-widest uppercase">Protocol</span>
@@ -80,22 +80,20 @@ const formatDate = (dateString) => {
                 <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#0c0c0c]"></div>
             </div>
 
-            <div class="z-20 p-4 pt-2">
+            <div class="z-20 p-4 pt-2 relative">
                 <h3 class="text-white game-font text-sm md:text-lg leading-snug tracking-normal">
                     {{ campaign.title }}
                 </h3>
             </div>
 
             <div
-                class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 px-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                <div class="p-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm shadow-2xl">
-                    <p class="text-gray-300 font-sans text-[11px] leading-relaxed">
-                        {{ campaign.description || 'No data available for this sector.' }}
-                    </p>
-                </div>
+                class="absolute inset-x-0 bottom-0 z-10 h-[60%] bg-gradient-to-t from-[#0c0c0c] via-black/90 to-transparent flex items-start justify-end flex-col px-4 pb-32 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 ease-out">
+                <p class="text-gray-300 font-sans text-[14px] leading-relaxed line-clamp-3 drop-shadow-sm">
+                    {{ campaign.description || 'No data available for this sector.' }}
+                </p>
             </div>
 
-            <div class="mt-auto z-20 p-4">
+            <div class="mt-auto z-20 p-4 relative">
                 <div class="flex justify-between items-end mb-3">
                     <div class="flex flex-col">
                         <span class="text-[10px] text-[#4ADE80] game-font mb-1 opacity-80">TIME_WINDOW</span>
@@ -146,10 +144,15 @@ const formatDate = (dateString) => {
 /* 가독성이 좋은 Pixelify Sans 또는 Silkscreen 추천 */
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
 
-.game-font {
+.pixel-font {
     font-family: 'Pixelify Sans', sans-serif;
-    /* 인위적인 쉐도우 제거 */
     text-shadow: none;
+}
+
+.pixel-window {
+    box-shadow: 4px 4px 0px #000000;
+    /* Deep shadow for the window itself */
+    image-rendering: pixels;
 }
 
 .pixel-card {

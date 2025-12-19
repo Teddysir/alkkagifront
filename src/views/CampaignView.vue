@@ -117,7 +117,7 @@ const handleCardClick = (campaign) => {
                 <section class="flex flex-col gap-2">
                     <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-yellow-600">
                         <h2 class="text-base text-yellow-600 font-bold tracking-widest pixel-font">COMING SOON</h2>
-                        <span class="text-xs text-gray-600">// LOCKED_ZONES</span>
+                        <span class="text-xs text-gray-600"></span>
                     </div>
 
                     <div class="flex items-center gap-2 md:gap-4">
@@ -148,7 +148,7 @@ const handleCardClick = (campaign) => {
                 <section class="flex flex-col gap-2">
                     <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-green-500">
                         <h2 class="text-base text-green-500 font-bold tracking-widest pixel-font">IN PROGRESS</h2>
-                        <span class="text-xs text-gray-500">// ACTIVE_MISSIONS</span>
+                        <span class="text-xs text-gray-500"></span>
                     </div>
 
                     <div class="flex items-center gap-2 md:gap-4">
@@ -178,7 +178,7 @@ const handleCardClick = (campaign) => {
                 <section class="flex flex-col gap-2">
                     <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-gray-500">
                         <h2 class="text-base text-gray-500 font-bold tracking-widest pixel-font">ARCHIVED</h2>
-                        <span class="text-xs text-gray-600">// PAST_LOGS</span>
+                        <span class="text-xs text-gray-600"></span>
                     </div>
 
                     <div class="flex items-center gap-2 md:gap-4">

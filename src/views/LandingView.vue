@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import CommonHeader from '@/components/CommonHeader.vue'
 
+// 백엔드 개발자로서의 사용자 정보를 기반으로 한 인증 스토어 사용
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -54,9 +55,9 @@ const displayedLines = ref([])
 const currentLineIndex = ref(0)
 const currentCharIndex = ref(0)
 
-// 0: transparent, 1: green, 2: red (ornament), 3: white (light/snow), 4: brown, 5: star
+// Tree Pixel Map (0: empty, 1: green, 2: red, 3: white, 4: brown, 5: star)
 const rawMap = [
-  "000000000050000000000", // Star
+  "000000000050000000000",
   "000000000111000000000",
   "000000001131100000000",
   "000000011111110000000",
@@ -79,19 +80,17 @@ const rawMap = [
   "000111311111111311000",
   "001111111111111111110",
   "011111112111111111110",
-  "111131111111111131111", // Wide base
-  "000000004444400000000", // Trunk
+  "111131111111111131111",
+  "000000004444400000000",
   "000000004444400000000",
   "000000004444400000000",
 ]
 
 const pixels = computed(() => {
   const result = []
-  rawMap.forEach((rowStr, rowIndex) => {
-    const row = rowStr.split('').map(Number)
-    row.forEach((type, colIndex) => {
-      // Keep empty pixels for grid structure
-      result.push({ type })
+  rawMap.forEach((rowStr) => {
+    rowStr.split('').forEach((char) => {
+      result.push({ type: Number(char) })
     })
   })
   return result
@@ -112,17 +111,14 @@ onMounted(() => {
 })
 
 const skipAnimation = () => {
-  // Immediately finish animation
   showEditor.value = false
   showTree.value = true
   showUI.value = true
 }
 
 const typeCode = () => {
-  if (!showEditor.value) return // Stop if skipped
-
+  if (!showEditor.value) return
   if (currentLineIndex.value >= codeLines.value.length) {
-    // Finished typing
     setTimeout(() => {
       showEditor.value = false
       setTimeout(() => {
@@ -134,21 +130,18 @@ const typeCode = () => {
   }
 
   const targetLine = codeLines.value[currentLineIndex.value]
-
   if (displayedLines.value.length <= currentLineIndex.value) {
     displayedLines.value.push({ text: '', indent: targetLine.indent })
   }
 
-  // Type characters
   if (currentCharIndex.value < targetLine.text.length) {
     displayedLines.value[currentLineIndex.value].text += targetLine.text[currentCharIndex.value]
     currentCharIndex.value++
-    setTimeout(typeCode, 30 + Math.random() * 30) // Random typing speed
+    setTimeout(typeCode, 40)
   } else {
-    // Line finished
     currentLineIndex.value++
     currentCharIndex.value = 0
-    setTimeout(typeCode, 100) // Pause between lines
+    setTimeout(typeCode, 150)
   }
 }
 
@@ -158,8 +151,8 @@ const getPixelClass = (type) => {
     case 2: return 'bg-red-500 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.3)]'
     case 3: return 'bg-white shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.1)]'
     case 4: return 'bg-[#8B4513] shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.4)]'
-    case 5: return 'bg-yellow-400 shadow-[inset_-2px_-2px_0px_rgba(0,0,0,0.2)] animate-pulse'
-    default: return 'invisible' // Don't render empty pixels
+    case 5: return 'bg-yellow-400 shadow-[0_0_10px_#facc15] animate-pulse'
+    default: return 'invisible'
   }
 }
 
@@ -172,7 +165,7 @@ const goToCampaign = () => {
   if (authStore.isAuthenticated) {
     router.push('/campaigns')
   } else {
-    alert('로그인이 필요한 서비스입니다.') // Optional protection
+    alert('로그인이 필요한 서비스입니다.')
     router.push('/login')
   }
 }
@@ -182,11 +175,9 @@ const goToCampaign = () => {
   <div
     class="min-h-screen bg-[#1e1e1e] flex flex-col items-center justify-center relative overflow-hidden font-mono select-none">
 
-    <!-- VS Code Editor Container -->
     <transition name="fade-editor">
       <div v-if="showEditor" class="absolute inset-0 z-30 flex items-center justify-center bg-[#1e1e1e]">
-        <div
-          class="w-full max-w-2xl p-6 rounded-lg font-mono text-sm md:text-lg leading-relaxed text-gray-300 relative group">
+        <div class="w-full max-w-2xl p-6 rounded-lg font-mono text-sm md:text-lg text-gray-300 relative group">
           <div class="flex flex-col gap-1">
             <div v-for="(line, idx) in displayedLines" :key="idx" class="flex">
               <span class="text-gray-600 mr-4 w-6 text-right select-none">{{ idx + 1 }}</span>
@@ -197,8 +188,6 @@ const goToCampaign = () => {
               </div>
             </div>
           </div>
-
-          <!-- SKIP Button -->
           <button @click="skipAnimation"
             class="absolute bottom-[-50px] right-0 text-gray-500 hover:text-white transition-colors tracking-widest text-sm font-bold animate-pulse">
             SKIP >
@@ -207,54 +196,41 @@ const goToCampaign = () => {
       </div>
     </transition>
 
-    <!-- Snow Container -->
     <div class="absolute inset-0 pointer-events-none z-0">
       <div v-for="(flake, i) in snowflakes" :key="i"
         class="absolute top-[-10px] w-1 h-1 bg-white rounded-full animate-fall" :style="flake.style"></div>
     </div>
 
-    <!-- Header UI -->
     <transition name="fade-slow">
       <CommonHeader v-if="showUI" :transparent="true" />
     </transition>
 
-    <!-- Center Content: Tree & Input -->
-    <!-- Full screen container to allow absolute positioning of Input -->
     <transition name="fade-slow">
-      <div v-if="showTree" class="absolute inset-0 z-10">
+      <div v-if="showTree" class="absolute inset-0 z-10 flex flex-col items-center justify-center">
 
-        <!-- Tree Container: Centered -->
-        <div class="h-full flex flex-col items-center justify-center pb-20"> <!-- pb-20 to offset input space -->
-          <div @click="goToCampaign"
-            class="relative scale-[2.2] md:scale-[2.6] cursor-pointer hover:scale-110 transition-transform duration-300"
-            title="Start Adventure">
-            <div class="grid" :style="{
-              gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`,
-              gap: '1px'
-            }">
-              <div v-for="(pixel, i) in pixels" :key="i" class="w-2 h-2"
-                :class="[getPixelClass(pixel.type), getExtraClasses(pixel.type)]"></div>
-            </div>
+        <div @click="goToCampaign"
+          class="relative scale-[2.2] md:scale-[2.6] cursor-pointer hover:scale-[2.4] md:hover:scale-[2.8] transition-all duration-500 ease-out hover:filter hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+          title="Start Adventure">
+          <div class="grid" :style="{ gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`, gap: '1px' }">
+            <div v-for="(pixel, i) in pixels" :key="i" class="w-2 h-2 transition-all duration-300"
+              :class="[getPixelClass(pixel.type), getExtraClasses(pixel.type)]"></div>
           </div>
         </div>
 
-        <!-- Prompt Input: Fixed at Bottom -->
         <div class="absolute bottom-[8vh] left-0 w-full flex justify-center px-4">
           <div class="w-full max-w-3xl">
-            <!-- Pixelated Container with Stepped Corners -->
             <div
-              class="relative bg-zinc-900 h-16 flex items-center px-6 pixel-box transition-all duration-300 hover:bg-zinc-800">
+              class="relative bg-zinc-900/50 backdrop-blur-sm h-16 flex items-center px-6 border-2 border-white/10 hover:border-white/30 transition-all duration-300">
               <span class="text-gray-400 mr-4 text-2xl font-mono">+</span>
-              <input v-model="promptText" type="text" placeholder="무엇이든 물어보세요"
-                class="bg-transparent text-white placeholder-gray-500 flex-1 outline-none font-mono text-base md:text-lg tracking-widest" />
+              <input v-model="promptText" type="text" placeholder="Explore the digital world..."
+                class="bg-transparent text-white placeholder-gray-500 flex-1 outline-none font-mono text-base md:text-lg" />
               <button
-                class="w-10 h-10 flex items-center justify-center bg-zinc-200 hover:bg-white transition-colors pixel-btn disabled:opacity-50 ml-2">
+                class="w-10 h-10 flex items-center justify-center bg-white hover:bg-[#4ADE80] transition-colors ml-2">
                 <span class="text-black font-bold text-xl leading-none">→</span>
               </button>
             </div>
           </div>
         </div>
-
       </div>
     </transition>
 
@@ -262,7 +238,6 @@ const goToCampaign = () => {
 </template>
 
 <style scoped>
-/* Snow Animation */
 @keyframes fall {
   0% {
     transform: translateY(0);
@@ -273,13 +248,31 @@ const goToCampaign = () => {
   }
 }
 
-.animate-fall {
-  animation-name: fall;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+@keyframes shine {
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.5) contrast(1.2);
+  }
 }
 
-/* UI Transitions */
+.animate-fall {
+  animation: fall linear infinite;
+}
+
+.animate-shine {
+  animation: shine 2s infinite ease-in-out;
+}
+
+/* 호버 시 장식물들 반짝임 속도 증가 */
+div[title="Start Adventure"]:hover .animate-shine {
+  animation-duration: 0.8s;
+}
+
 .fade-editor-leave-active {
   transition: opacity 1.5s ease;
 }
@@ -288,13 +281,15 @@ const goToCampaign = () => {
   opacity: 0;
 }
 
-/* Slow Fade In for Tree & UI */
 .fade-slow-enter-active {
-  transition: opacity 3s ease-in-out;
-  /* Long gradient fade */
+  transition: opacity 2.5s ease-in-out;
 }
 
 .fade-slow-enter-from {
   opacity: 0;
+}
+
+.pixelated {
+  image-rendering: pixelated;
 }
 </style>
