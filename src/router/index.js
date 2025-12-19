@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('../views/CampaignView.vue'),
     },
     {
+      path: '/campaigns/:id',
+      name: 'campaign-detail',
+      component: () => import('../views/CampaignDetailView.vue'),
+    },
+    {
       path: '/campaign/create',
       name: 'campaign-create',
       component: () => import('../views/CampaignCreateView.vue'),

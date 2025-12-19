@@ -62,7 +62,7 @@ const formatDate = (dateString) => {
 
 <template>
     <div class="pixel-card flex flex-col w-full h-[340px] bg-[#0c0c0c] border-[2px] box-border transition-all duration-300 group relative overflow-hidden rounded-sm"
-        :class="cardClasses">
+        :class="cardClasses" @click="$emit('click', $event)">
 
         <div class="h-7 flex items-center justify-between px-3 bg-white/5 border-b border-white/10 z-30 relative">
             <div class="flex items-center gap-2">

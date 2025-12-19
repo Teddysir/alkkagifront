@@ -55,7 +55,9 @@ const next = (groupKey) => { if (canGoNext(groupKey)) pageIndices.value[groupKey
 const prev = (groupKey) => { if (canGoPrev(groupKey)) pageIndices.value[groupKey]-- }
 
 const handleCardClick = (campaign) => {
-    if (campaign.status === 'open') console.log('Open campaign clicked', campaign)
+    console.log('Card Clicked:', campaign.id, campaign.status)
+    // Navigate to detail page for all campaigns (open, closed, future)
+    router.push(`/campaigns/${campaign.id}`)
 }
 </script>
 
@@ -88,7 +90,8 @@ const handleCardClick = (campaign) => {
                             <div v-if="getVisibleItems('future').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('future').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
-                                <span class="text-gray-800 text-4xl">+</span></div>
+                                <span class="text-gray-800 text-4xl">+</span>
+                            </div>
                         </div>
                         <button @click="next('future')" :disabled="!canGoNext('future')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoNext('future') }"><span>&gt;</span></button>
@@ -108,7 +111,8 @@ const handleCardClick = (campaign) => {
                             <div v-if="getVisibleItems('open').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('open').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
-                                <span class="text-gray-800 text-4xl">+</span></div>
+                                <span class="text-gray-800 text-4xl">+</span>
+                            </div>
                         </div>
                         <button @click="next('open')" :disabled="!canGoNext('open')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoNext('open') }"><span>&gt;</span></button>
@@ -128,7 +132,8 @@ const handleCardClick = (campaign) => {
                             <div v-if="getVisibleItems('closed').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('closed').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
-                                <span class="text-gray-800 text-4xl">+</span></div>
+                                <span class="text-gray-800 text-4xl">+</span>
+                            </div>
                         </div>
                         <button @click="next('closed')" :disabled="!canGoNext('closed')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoNext('closed') }"><span>&gt;</span></button>

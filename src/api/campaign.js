@@ -14,3 +14,33 @@ export const createCampaign = async (formData) => {
     })
     return response.data
 }
+
+export const getCampaignDetail = async (id) => {
+    const response = await axios.get(`/campaigns/${id}`)
+    return response.data
+}
+
+export const getCampaignProblems = async (id, params = {}) => {
+    const response = await axios.get(`/campaigns/${id}/problems/lists`, { params })
+    return response.data
+}
+
+export const searchProblems = async (params) => {
+    // params: { 'platform-type': 'BOJ'|'PROGRAMMERS'|'SWEA', keyword: 'string' }
+    const response = await axios.get('/problems', { params })
+    return response.data
+}
+
+export const addCampaignProblems = async (campaignId, payload) => {
+    // payload: { problems: [{ problemId, startDate, endDate }] }
+    const response = await axios.post(`/campaigns/${campaignId}/problems`, payload)
+    return response.data
+}
+
+export const deleteCampaignProblem = async (campaignId, problemId) => {
+    // Note: User did not specify exact endpoint but standard REST is DELETE /campaigns/:id/problems/:pid
+    // Or maybe just DELETE /campaigns/problems/:id?
+    // Based on "CampaignDetailView ... delete button", I'll assume standard nested resource.
+    const response = await axios.delete(`/campaigns/${campaignId}/problems/${problemId}`)
+    return response.data
+}
