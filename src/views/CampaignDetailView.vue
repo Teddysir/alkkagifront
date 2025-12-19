@@ -1,6 +1,6 @@
 ```vue
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem } from '@/api/campaign'
 import { useAuthStore } from '@/api/stores'
@@ -23,6 +23,10 @@ const searchKeyword = ref('')
 const searchResults = ref([])
 const newProblems = ref([])
 const newProblemDates = ref({})
+
+// Animation references
+const problemElements = ref([])
+const observer = ref(null)
 
 // Detail Modal State
 const showDetailModal = ref(false)
@@ -49,8 +53,18 @@ const formatDateTime = (dateString) => {
     return `${y}. ${m}. ${d} ${h}:${min}`
 }
 
+// Helper checks
 const isProblemEnded = (endDate) => {
     return new Date() > new Date(endDate)
+}
+
+const getProblemStatus = (start, end) => {
+    const now = new Date()
+    const s = new Date(start)
+    const e = new Date(end)
+    if (now < s) return 'FUTURE'
+    if (now > e) return 'PAST'
+    return 'CURRENT'
 }
 
 // Timeline Items
@@ -194,8 +208,19 @@ const handleDeleteProblem = async () => {
     if (!selectedDetailProblem.value) return
     if (!confirm('WARNING: DELETE THIS STAGE?')) return
 
+    console.log('Attempting to delete:', selectedDetailProblem.value)
+    // Try to find the correct ID field. The API likely needs the mapping ID or the problem ID depending on backend implementation.
+    // Based on typical ManyToMany, it might be an ID specific to the relation.
+    // Falling back to `id` (often the relation ID) or `problemId` (the actual problem).
+    const targetId = selectedDetailProblem.value.campaignProblemId
+
+    if (!targetId) {
+        alert('ERROR: Undefined Problem ID')
+        return
+    }
+
     try {
-        await deleteCampaignProblem(campaignId, selectedDetailProblem.value.problemId || selectedDetailProblem.value.id)
+        await deleteCampaignProblem(campaignId, targetId)
         alert('STAGE DELETED')
         showDetailModal.value = false
         selectedDetailProblem.value = null
@@ -218,7 +243,27 @@ const getDifficultyColor = (diff) => {
     return 'text-gray-500'
 }
 
-onMounted(fetchData)
+onMounted(() => {
+    fetchData()
+
+    // Setup Intersection Observer for scroll animations
+    observer.value = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible')
+                observer.value.unobserve(entry.target) // Stop observing once visible
+            }
+        })
+    }, { threshold: 0.1 })
+})
+
+// watch for problems to change, then observe new elements
+watch(problems, async () => {
+    await nextTick()
+    if (problemElements.value) {
+        problemElements.value.forEach(el => observer.value.observe(el))
+    }
+})
 </script>
 
 <template>
@@ -315,9 +360,11 @@ onMounted(fetchData)
                     <template v-for="(item, idx) in timelineItems" :key="idx">
 
                         <!-- PROBLEM CARD (Stage) -->
-                        <div v-if="item.type === 'problem'"
-                            class="relative flex items-center mb-12 md:mb-20 min-h-[150px]"
-                            :class="idx % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row'">
+                        <div v-if="item.type === 'problem'" ref="problemElements"
+                            class="relative flex items-center mb-8 md:mb-12 min-h-[150px] fade-in-section" :class="[
+                                idx % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row',
+                                getProblemStatus(item.data.startDate, item.data.endDate) === 'FUTURE' && !authStore.isAdmin ? 'foggy-future' : ''
+                            ]">
 
                             <!-- Timeline Dot -->
                             <div class="absolute left-0 md:left-1/2 -translate-x-[5px] md:-translate-x-1/2 w-3 h-3 bg-[#0a0a0a] border-2 z-20 rounded-full transition-colors"
@@ -361,6 +408,11 @@ onMounted(fetchData)
                                             <span>{{ formatDateTime(item.data.startDate) }}</span>
                                             <span>~</span>
                                             <span>{{ formatDateTime(item.data.endDate) }}</span>
+                                        </div>
+                                        <!-- Status Indicator for Current Problems -->
+                                        <div v-if="getProblemStatus(item.data.startDate, item.data.endDate) === 'CURRENT'"
+                                            class="mt-2 text-green-400 text-[10px] animate-pulse font-bold">
+                                            >> CURRENTLY ACTIVE
                                         </div>
                                     </div>
                                 </div>
@@ -493,7 +545,7 @@ onMounted(fetchData)
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 gap-3">
                                     <div>
                                         <label class="block text-[9px] text-purple-400 mb-1 font-bold">START
                                             TIME</label>
@@ -579,5 +631,26 @@ onMounted(fetchData)
 .pixel-window {
     box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5);
 }
+
+/* Scroll Animation Classes */
+.fade-in-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    will-change: opacity, visibility;
+}
+
+.fade-in-section.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Future Problem Foggy Effect */
+.foggy-future {
+    filter: blur(5px) grayscale(0.8);
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+    transition: all 0.5s;
+}
 </style>
-```
