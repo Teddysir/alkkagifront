@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import CommonHeader from '@/components/CommonHeader.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -214,30 +215,7 @@ const goToCampaign = () => {
 
     <!-- Header UI -->
     <transition name="fade-slow">
-      <nav v-if="showUI" class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20">
-        <div
-          class="text-white text-3xl font-bold tracking-wider pixel-font hover:text-green-400 cursor-pointer transition-colors">
-          Alkkagi
-        </div>
-        <div class="flex gap-6 items-center">
-          <template v-if="!authStore.isAuthenticated">
-            <RouterLink to="/login"
-              class="text-white hover:text-green-400 transition-colors uppercase tracking-widest text-xs md:text-sm no-underline">
-              LOGIN / SIGNUP</RouterLink>
-          </template>
-          <template v-else>
-            <span
-              class="text-gray-400 uppercase tracking-widest text-xs md:text-sm mr-4 shadow-black drop-shadow-md font-mono">
-              <span class="text-green-400 font-bold">{{ authStore.user?.nickname }}</span> 용사님 환영합니다!
-            </span>
-
-            <button @click="authStore.logout()"
-              class="text-gray-400 hover:text-white transition-colors uppercase tracking-widest text-xs md:text-sm font-mono">
-              LOGOUT
-            </button>
-          </template>
-        </div>
-      </nav>
+      <CommonHeader v-if="showUI" :transparent="true" />
     </transition>
 
     <!-- Center Content: Tree & Input -->

@@ -1,13 +1,14 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchCampaigns } from '@/api/campaign'
+import CampaignCard from '@/components/CampaignCard.vue'
+import CommonHeader from '@/components/CommonHeader.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const isLoading = ref(true)
-
-// Audio
-const bgmAudio = ref(null)
 
 // Data Groups
 const openCampaigns = ref([])
@@ -21,17 +22,10 @@ const pageIndices = ref({
     closed: 0
 })
 
-const ITEMS_PER_PAGE = 4
-const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+const ITEMS_PER_PAGE = 3
+const today = new Date().toISOString().split('T')[0]
 
 onMounted(async () => {
-    // Start BGM with Fade In
-    if (bgmAudio.value) {
-        bgmAudio.value.volume = 0
-        bgmAudio.value.play().catch(e => console.log('Autoplay blocked:', e))
-        fadeInAudio()
-    }
-
     try {
         const response = await fetchCampaigns()
         const list = response.data || []
@@ -55,47 +49,6 @@ onMounted(async () => {
         isLoading.value = false
     }
 })
-
-onUnmounted(() => {
-    if (bgmAudio.value) {
-        bgmAudio.value.pause()
-        bgmAudio.value.currentTime = 0
-    }
-})
-
-const fadeInAudio = () => {
-    let vol = 0;
-    const interval = setInterval(() => {
-        if (!bgmAudio.value) {
-            clearInterval(interval)
-            return
-        }
-        if (vol < 1.0) {
-            vol += 0.05
-            bgmAudio.value.volume = Math.min(vol, 1.0)
-        } else {
-            clearInterval(interval)
-        }
-    }, 200) // Increase volume every 200ms
-}
-
-// Visual Helpers
-const getIslandImage = (status) => {
-    switch (status) {
-        case 'future': return '/image/island_1.png'
-        case 'closed': return '/image/island_3.png'
-        default: return '/image/island_2.png'
-    }
-}
-
-const getStatusLabel = (status) => {
-    switch (status) {
-        case 'future': return 'JOIN' // User requested JOIN for future (Coming Soon)
-        case 'closed': return 'CLOSED'
-        case 'open': return 'VIEW' // User requested VIEW for Open
-        default: return 'VIEW'
-    }
-}
 
 // Carousel Logic
 const getVisibleItems = (groupKey) => {
@@ -126,310 +79,166 @@ const prev = (groupKey) => {
     if (canGoPrev(groupKey)) pageIndices.value[groupKey]--
 }
 
-const handleIslandClick = (id) => {
-    console.log('Clicked campaign', id)
+const handleCardClick = (campaign) => {
+    if (campaign.status === 'open') {
+        const quizId = campaign.quizId || campaign.id
+        // router.push(`/quiz/${quizId}`) 
+        console.log('Open campaign clicked', campaign)
+    }
 }
 </script>
 
 <template>
-    <div class="min-h-screen relative overflow-x-hidden font-mono select-none flex flex-col">
+    <div
+        class="min-h-screen bg-[#1e1e1e] text-[#d4d4d4] font-mono flex flex-col overflow-hidden relative selection:bg-green-500/30">
 
-        <!-- Background Animation Layer -->
-        <div class="absolute inset-0 z-0 bg-blue-900 pointer-events-none">
-            <!-- Use classes to animate opacity -->
-            <div class="absolute inset-0 bg-cover bg-center animate-bg-1"
-                style="background-image: url('/image/mapback.png');"></div>
-            <div class="absolute inset-0 bg-cover bg-center animate-bg-2"
-                style="background-image: url('/image/mapback_2.png');"></div>
-            <div class="absolute inset-0 bg-cover bg-center animate-bg-3"
-                style="background-image: url('/image/mapback_3.png');"></div>
-            <div class="absolute inset-0 bg-blue-900/30"></div>
+        <!-- Background Grid Pattern -->
+        <div class="absolute inset-0 pointer-events-none opacity-20"
+            style="background-image: radial-gradient(#4a4a4a 2px, transparent 2px); background-size: 16px 16px;">
         </div>
 
-        <!-- Hidden Audio -->
-        <audio ref="bgmAudio" loop src="/bgm.mp3"></audio>
+        <!-- Common Header -->
+        <CommonHeader />
 
-        <!-- Header -->
-        <nav
-            class="absolute top-0 left-0 w-full p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
-            <button @click="router.push('/')"
-                class="text-white text-3xl font-bold tracking-wider pixel-font hover:text-green-400 transition-colors drop-shadow-md pointer-events-auto">
-                Alkkagi Map
-            </button>
-        </nav>
+        <!-- Main Content -->
+        <div
+            class="relative z-10 flex-1 flex flex-col justify-start gap-8 py-8 px-4 md:px-12 max-w-[1400px] mx-auto w-full overflow-y-auto">
 
-        <!-- Content Container -->
-        <!-- justify-evenly to spread rows across full screen height -->
-        <div class="relative z-10 w-full min-h-screen flex flex-col justify-evenly py-20 px-4 md:px-12">
-
-            <div v-if="isLoading" class="text-white text-2xl animate-pulse pixel-font text-center">
-                Loading Map...
+            <div v-if="isLoading" class="text-center text-green-500 animate-pulse mt-20 text-xl font-bold">
+                > INITIALIZING_SYSTEM..._
             </div>
 
-            <!-- ROW 1: FUTURE (Coming Soon) -->
-            <!-- User requested: Top = Future (Coming Soon) -->
-            <section v-if="!isLoading && futureCampaigns.length > 0" class="flex flex-col gap-2">
-                <!-- <h2
-                    class="text-gray-300 text-lg md:text-xl pixel-font tracking-widest drop-shadow-[2px_2px_0_rgba(0,0,0,1)] ml-4">
-                    COMING SOON
-                </h2> -->
-                <div class="flex items-center gap-4">
-                    <button @click="prev('future')" :disabled="!canGoPrev('future')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/left.png" class="w-10 h-10 pixel-art" />
-                    </button>
+            <!-- Sections -->
+            <template v-else>
 
-                    <div class="flex-1 grid grid-cols-4 gap-4 min-h-[260px]">
-                        <!-- Fixed min-height to prevent jumping -->
-                        <div v-for="campaign in getVisibleItems('future')" :key="campaign.id"
-                            class="relative flex flex-col items-center cursor-pointer group"
-                            @click="handleIslandClick(campaign.id)">
-                            <!-- Larger Island -->
-                            <img :src="getIslandImage('future')"
-                                class="w-full max-w-[280px] drop-shadow-2xl pixel-art grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
-                            <div class="absolute -bottom-6 flex flex-col items-center z-10">
-                                <span class="text-gray-300 font-bold text-xs bg-black/60 px-2 truncate max-w-[150px]">{{
-                                    campaign.title }}</span>
-                                <span
-                                    class="bg-gray-600 text-white text-[10px] px-2 py-0.5 border border-white mt-1 uppercase">{{
-                                        getStatusLabel('future') }}</span>
-                                <span class="text-[9px] text-gray-400 mt-0.5">{{ campaign.startDate.split('T')[0] }}
-                                    OPEN</span>
-                            </div>
-                        </div>
+                <!-- FUTURE -->
+                <section class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-yellow-600">
+                        <h2 class="text-base text-yellow-600 font-bold tracking-widest pixel-font">COMING SOON</h2>
+                        <span class="text-xs text-gray-600">// LOCKED_ZONES</span>
                     </div>
 
-                    <button @click="next('future')" :disabled="!canGoNext('future')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/right.png" class="w-10 h-10 pixel-art" />
-                    </button>
-                </div>
-            </section>
+                    <div class="flex items-center gap-2 md:gap-4">
+                        <button @click="prev('future')" :disabled="!canGoPrev('future')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoPrev('future') }">
+                            <span class="group-active:translate-x-[-2px]">&lt;</span>
+                        </button>
 
-            <!-- ROW 2: OPEN (Adventure In Progress) -->
-            <!-- Middle Row = In Progress -->
-            <section v-if="!isLoading && openCampaigns.length > 0" class="flex flex-col gap-2">
-                <!-- <h2
-                    class="text-green-400 text-lg md:text-xl pixel-font tracking-widest drop-shadow-[2px_2px_0_rgba(0,0,0,1)] ml-4">
-                    ADVENTURE IN PROGRESS
-                </h2> -->
-                <div class="flex items-center gap-4">
-                    <button @click="prev('open')" :disabled="!canGoPrev('open')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/left.png" class="w-10 h-10 pixel-art" />
-                    </button>
-
-                    <div class="flex-1 grid grid-cols-4 gap-4 min-h-[260px]">
-                        <div v-for="campaign in getVisibleItems('open')" :key="campaign.id"
-                            class="relative flex flex-col items-center cursor-pointer group animate-float"
-                            @click="handleIslandClick(campaign.id)">
-                            <img :src="getIslandImage('open')"
-                                class="w-full max-w-[280px] drop-shadow-2xl pixel-art hover:scale-105 transition-transform duration-300" />
-                            <div class="absolute -bottom-6 flex flex-col items-center z-10">
-                                <span class="text-white font-bold text-xs bg-black/60 px-2 truncate max-w-[150px]">{{
-                                    campaign.title }}</span>
-                                <span
-                                    class="bg-red-500 text-white text-[10px] px-2 py-0.5 border border-white mt-1 uppercase">{{
-                                        getStatusLabel('open') }}</span>
+                        <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
+                            <CampaignCard v-for="c in getVisibleItems('future')" :key="c.id" :campaign="c"
+                                :status="'future'" @click="handleCardClick(c)" />
+                            <!-- Placeholders -->
+                            <div v-if="getVisibleItems('future').length < ITEMS_PER_PAGE"
+                                v-for="n in (ITEMS_PER_PAGE - getVisibleItems('future').length)"
+                                class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
+                                <span class="text-gray-800 text-4xl">+</span>
                             </div>
                         </div>
+
+                        <button @click="next('future')" :disabled="!canGoNext('future')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoNext('future') }">
+                            <span class="group-active:translate-x-[2px]">&gt;</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- OPEN -->
+                <section class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-green-500">
+                        <h2 class="text-base text-green-500 font-bold tracking-widest pixel-font">IN PROGRESS</h2>
+                        <span class="text-xs text-gray-500">// ACTIVE_MISSIONS</span>
                     </div>
 
-                    <button @click="next('open')" :disabled="!canGoNext('open')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/right.png" class="w-10 h-10 pixel-art" />
-                    </button>
-                </div>
-            </section>
+                    <div class="flex items-center gap-2 md:gap-4">
+                        <button @click="prev('open')" :disabled="!canGoPrev('open')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoPrev('open') }">
+                            <span class="group-active:translate-x-[-2px]">&lt;</span>
+                        </button>
 
-            <!-- ROW 3: CLOSED (Archived) -->
-            <!-- Bottom Row = Closed -->
-            <section v-if="!isLoading && closedCampaigns.length > 0" class="flex flex-col gap-2">
-                <!-- <h2
-                    class="text-zinc-500 text-lg md:text-xl pixel-font tracking-widest drop-shadow-[2px_2px_0_rgba(0,0,0,1)] ml-4">
-                    ARCHIVED ISLES
-                </h2> -->
-                <div class="flex items-center gap-4">
-                    <button @click="prev('closed')" :disabled="!canGoPrev('closed')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/left.png" class="w-10 h-10 pixel-art" />
-                    </button>
-
-                    <div class="flex-1 grid grid-cols-4 gap-4 min-h-[260px]">
-                        <div v-for="campaign in getVisibleItems('closed')" :key="campaign.id"
-                            class="relative flex flex-col items-center cursor-pointer group"
-                            @click="handleIslandClick(campaign.id)">
-                            <img :src="getIslandImage('closed')"
-                                class="w-full max-w-[280px] drop-shadow-2xl pixel-art brightness-50 hover:brightness-75 transition-all duration-300" />
-                            <div class="absolute -bottom-6 flex flex-col items-center z-10">
-                                <span class="text-gray-500 font-bold text-xs bg-black/60 px-2 truncate max-w-[150px]">{{
-                                    campaign.title }}</span>
-                                <span
-                                    class="bg-zinc-700 text-gray-400 text-[10px] px-2 py-0.5 border border-gray-500 mt-1 uppercase">{{
-                                        getStatusLabel('closed') }}</span>
+                        <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
+                            <CampaignCard v-for="c in getVisibleItems('open')" :key="c.id" :campaign="c"
+                                :status="'open'" @click="handleCardClick(c)" />
+                            <div v-if="getVisibleItems('open').length < ITEMS_PER_PAGE"
+                                v-for="n in (ITEMS_PER_PAGE - getVisibleItems('open').length)"
+                                class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
+                                <span class="text-gray-800 text-4xl">+</span>
                             </div>
                         </div>
+
+                        <button @click="next('open')" :disabled="!canGoNext('open')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoNext('open') }">
+                            <span class="group-active:translate-x-[2px]">&gt;</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- CLOSED -->
+                <section class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3 mb-1 px-2 border-l-4 border-gray-500">
+                        <h2 class="text-base text-gray-500 font-bold tracking-widest pixel-font">ARCHIVED</h2>
+                        <span class="text-xs text-gray-600">// PAST_LOGS</span>
                     </div>
 
-                    <button @click="next('closed')" :disabled="!canGoNext('closed')"
-                        class="transition-transform active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
-                        <img src="/image/right.png" class="w-10 h-10 pixel-art" />
-                    </button>
-                </div>
-            </section>
+                    <div class="flex items-center gap-2 md:gap-4">
+                        <button @click="prev('closed')" :disabled="!canGoPrev('closed')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoPrev('closed') }">
+                            <span class="group-active:translate-x-[-2px]">&lt;</span>
+                        </button>
 
+                        <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
+                            <CampaignCard v-for="c in getVisibleItems('closed')" :key="c.id" :campaign="c"
+                                :status="'closed'" @click="handleCardClick(c)" />
+                            <div v-if="getVisibleItems('closed').length < ITEMS_PER_PAGE"
+                                v-for="n in (ITEMS_PER_PAGE - getVisibleItems('closed').length)"
+                                class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
+                                <span class="text-gray-800 text-4xl">+</span>
+                            </div>
+                        </div>
+
+                        <button @click="next('closed')" :disabled="!canGoNext('closed')" class="nav-arrow group"
+                            :class="{ 'opacity-20 cursor-not-allowed': !canGoNext('closed') }">
+                            <span class="group-active:translate-x-[2px]">&gt;</span>
+                        </button>
+                    </div>
+                </section>
+
+            </template>
         </div>
     </div>
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .pixel-font {
-    font-family: 'Courier New', Courier, monospace;
-    text-shadow: 2px 2px 0px #000;
-    font-weight: bold;
+    font-family: 'Press Start 2P', cursive;
+    /* text-shadow removed for cleaner look */
 }
 
 .pixel-art {
     image-rendering: pixelated;
 }
 
-@keyframes float {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-6px);
-    }
+.nav-arrow {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #18181b;
+    /* zinc-900 */
+    border: 2px solid #3f3f46;
+    /* zinc-700 */
+    color: #a1a1aa;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    transition: all 0.1s;
+    box-shadow: 4px 4px 0px #000;
+    flex-shrink: 0;
 }
 
-.animate-float {
-    animation: float 3s ease-in-out infinite;
-}
-
-/* Background Animation Loop */
-/* Total cycle: 3s? User said "actual wave feeling". Maybe slower. 
-   Option: 
-   Image 1: 0-33% opacity 1, then fade out.
-   Image 2: 33-66% opacity 1, then fade out.
-   Image 3: 66-100% opacity 1, then fade out.
-   Or crossfade. 
-   Let's try a simple 3-step animation.
-*/
-@keyframes bg-cycle-1 {
-
-    0%,
-    25% {
-        opacity: 1;
-    }
-
-    33%,
-    92% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-@keyframes bg-cycle-2 {
-
-    0%,
-    25% {
-        opacity: 0;
-    }
-
-    33%,
-    58% {
-        opacity: 1;
-    }
-
-    66%,
-    100% {
-        opacity: 0;
-    }
-}
-
-@keyframes bg-cycle-3 {
-
-    0%,
-    58% {
-        opacity: 0;
-    }
-
-    66%,
-    92% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
-}
-
-/* Actually, let's keep it simple: 
-   Frame 1: 0% -> 33% Visible
-   Frame 2: 33% -> 66% Visible
-   Frame 3: 66% -> 100% Visible
-   Wait, they are frames of animation? "actually flowing waves". 
-   If they are sequence frames, we should just toggle visibility rapidly or smoothly. 
-   Let's try smooth crossfade. Cycle time 3s.
-*/
-
-.animate-bg-1 {
-    animation: bgFrame1 1.5s infinite steps(1);
-}
-
-.animate-bg-2 {
-    animation: bgFrame2 1.5s infinite steps(1);
-}
-
-.animate-bg-3 {
-    animation: bgFrame3 1.5s infinite steps(1);
-}
-
-@keyframes bgFrame1 {
-    0% {
-        opacity: 1;
-    }
-
-    33.33% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 0;
-    }
-}
-
-@keyframes bgFrame2 {
-    0% {
-        opacity: 0;
-    }
-
-    33.33% {
-        opacity: 1;
-    }
-
-    66.66% {
-        opacity: 0;
-    }
-}
-
-@keyframes bgFrame3 {
-    0% {
-        opacity: 0;
-    }
-
-    66.66% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+.nav-arrow:hover:not(:disabled) {
+    border-color: #52525b;
+    color: white;
 }
 </style>
