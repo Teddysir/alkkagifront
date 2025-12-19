@@ -1,24 +1,39 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { login as loginApi } from '@/api/auth'
+import { checkIsAdmin } from '@/api/axios' // axios.js에서 만든 함수 가져오기
 
 export const useAuthStore = defineStore('auth', () => {
+    // 1. 상태(State) 관리
     const user = ref(JSON.parse(localStorage.getItem('user')) || null)
+    // token도 ref로 만들어야 isAdmin이 실시간으로 반응합니다.
+    const token = ref(localStorage.getItem('Authorization') || null)
+
+    // 2. Getter (Computed)
     const isAuthenticated = computed(() => !!user.value)
 
+    // [추가] 어드민 여부 계산
+    const isAdmin = computed(() => {
+        if (!token.value) return false
+        return checkIsAdmin(token.value)
+    })
+
+    // 3. Actions
     const login = async (email, password) => {
         try {
             const response = await loginApi(email, password)
 
             // Token handling
-            const token = response.headers['authorization']
-            if (token) {
-                const cleanToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token
+            const rawToken = response.headers['authorization']
+            if (rawToken) {
+                const cleanToken = rawToken.startsWith('Bearer ') ? rawToken.split(' ')[1] : rawToken
+
+                // localStorage와 ref를 동시에 업데이트해야 반응형이 작동합니다.
                 localStorage.setItem('Authorization', cleanToken)
+                token.value = cleanToken
             }
 
-            // User data handling from response body
-            // Response structure: { message, data: { ...user info... } }
+            // User data handling
             if (response.data && response.data.data) {
                 user.value = response.data.data
                 localStorage.setItem('user', JSON.stringify(user.value))
@@ -35,10 +50,14 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('Authorization')
         localStorage.removeItem('user')
         user.value = null
+        token.value = null // 토큰 초기화
     }
 
+    // 반드시 모든 변수와 함수를 return해야 외부(Header 등)에서 쓸 수 있습니다.
     return {
         user,
+        token,
+        isAdmin,
         isAuthenticated,
         login,
         logout

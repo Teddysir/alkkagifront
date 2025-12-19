@@ -41,6 +41,12 @@ const goToProfile = () => router.push('/profile')
                 <span class="text-gray-400 font-mono text-xs hidden md:inline ml-auto">
                     WELCOME, <span class="text-green-400">{{ authStore.user?.nickname || 'FIGHTER' }}</span>
                 </span>
+
+                <button v-if="authStore.isAdmin" @click="router.push('/campaign/create')"
+                    class="px-4 py-2 border-2 border-purple-500 text-purple-400 font-bold text-xs hover:bg-purple-500 hover:text-white transition-colors">
+                    <PixelText>[ NEW MISSION ]</PixelText>
+                </button>
+
                 <button @click="goToProfile"
                     class="px-4 py-2 border-2 border-green-500 text-green-400 font-bold text-xs hover:bg-green-500 hover:text-white transition-colors">
                     <PixelText>[ MY_PAGE ]</PixelText>

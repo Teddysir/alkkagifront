@@ -8,11 +8,10 @@ const props = defineProps({
     },
     status: {
         type: String,
-        default: 'open'
+        default: 'open' // open(In Progress), future(Coming Soon), closed
     }
 })
 
-// 진행률 계산
 const progress = computed(() => {
     if (!props.campaign.startDate || !props.campaign.endDate) return 0
     const now = new Date()
@@ -28,17 +27,21 @@ const progress = computed(() => {
 const cardClasses = computed(() => {
     switch (props.status) {
         case 'closed': return 'opacity-70 grayscale border-gray-600'
-        case 'future': return 'opacity-90 border-blue-900'
-        case 'open': return 'hover:border-[#4ADE80] hover:shadow-[0_0_20px_rgba(74,222,128,0.2)]'
+        case 'future':
+            // COMING SOON -> 초록색 테마 일치
+            return 'border-[#4ADE80]/50 hover:border-[#4ADE80] hover:shadow-[0_0_20px_rgba(74,222,128,0.2)]'
+        case 'open':
+            // IN PROGRESS -> 하늘색 테마 일치
+            return 'border-sky-500/50 hover:border-sky-400 hover:shadow-[0_0_20px_rgba(56,189,248,0.2)]'
         default: return ''
     }
 })
 
 const statusLabel = computed(() => {
     switch (props.status) {
-        case 'future': return 'LOCKED'
+        case 'future': return 'NOW JOIN'
         case 'closed': return 'FINISHED'
-        case 'open': return 'MISSION START'
+        case 'open': return 'IN PROGRESS'
         default: return 'VIEW'
     }
 })
@@ -58,12 +61,16 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-    <div class="pixel-card flex flex-col w-full h-[340px] bg-[#0c0c0c] border-[2px] border-white/20 box-border transition-all duration-300 group relative overflow-hidden rounded-sm"
+    <div class="pixel-card flex flex-col w-full h-[340px] bg-[#0c0c0c] border-[2px] box-border transition-all duration-300 group relative overflow-hidden rounded-sm"
         :class="cardClasses">
 
         <div class="h-7 flex items-center justify-between px-3 bg-white/5 border-b border-white/10 z-30 relative">
             <div class="flex items-center gap-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" :class="{ 'animate-ping': status === 'open' }"></div>
+                <div class="w-1.5 h-1.5 rounded-full" :class="{
+                    'bg-sky-400 animate-ping': status === 'open',
+                    'bg-[#4ADE80]': status === 'future',
+                    'bg-gray-500': status === 'closed'
+                }"></div>
                 <span class="game-font text-[10px] text-white/50 tracking-widest uppercase">Protocol</span>
             </div>
             <div class="flex gap-1">
@@ -73,7 +80,6 @@ const formatDate = (dateString) => {
         </div>
 
         <div class="flex-1 flex flex-col relative overflow-hidden">
-
             <div v-if="thumbnailSrc" class="absolute inset-0 z-0">
                 <img :src="thumbnailSrc"
                     class="w-full h-full object-cover pixelated opacity-80 transition-transform duration-700 group-hover:scale-105" />
@@ -96,7 +102,8 @@ const formatDate = (dateString) => {
             <div class="mt-auto z-20 p-4 relative">
                 <div class="flex justify-between items-end mb-3">
                     <div class="flex flex-col">
-                        <span class="text-[10px] text-[#4ADE80] game-font mb-1 opacity-80">TIME_WINDOW</span>
+                        <span class="text-[10px] game-font mb-1 opacity-80"
+                            :class="status === 'open' ? 'text-sky-400' : 'text-[#4ADE80]'">TIME_WINDOW</span>
                         <span class="text-white font-mono text-sm font-medium tracking-tighter">
                             {{ formatDate(campaign.startDate) }} ~ {{ formatDate(campaign.endDate) }}
                         </span>
@@ -105,7 +112,8 @@ const formatDate = (dateString) => {
                 </div>
 
                 <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
-                    <div class="h-full bg-[#4ADE80] shadow-[0_0_10px_#4ADE80] transition-all duration-1000 ease-out relative"
+                    <div class="h-full shadow-[0_0_10px] transition-all duration-1000 ease-out relative"
+                        :class="status === 'open' ? 'bg-sky-500 shadow-sky-500' : 'bg-[#4ADE80] shadow-[#4ADE80]'"
                         :style="{ width: progress + '%' }">
                         <div
                             class="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] animate-shimmer">
@@ -116,13 +124,15 @@ const formatDate = (dateString) => {
                 <div class="flex justify-between items-center">
                     <div class="flex gap-1.5">
                         <div v-for="i in 5" :key="i" class="w-1 h-1 rounded-full"
-                            :class="i / 5 <= progress / 100 ? 'bg-[#4ADE80]' : 'bg-white/10'"></div>
+                            :class="i / 5 <= progress / 100 ? (status === 'open' ? 'bg-sky-400' : 'bg-[#4ADE80]') : 'bg-white/10'">
+                        </div>
                     </div>
 
                     <button class="status-btn px-4 py-1.5 text-[10px] font-bold game-font transition-all rounded-sm"
                         :class="{
-                            'bg-[#4ADE80] text-black hover:bg-[#3dbd6d] hover:scale-105 active:scale-95': status === 'open',
-                            'bg-white/10 text-white/30 cursor-not-allowed': status !== 'open'
+                            'bg-sky-500 text-black hover:bg-sky-400 hover:scale-105 active:scale-95': status === 'open',
+                            'bg-[#4ADE80] text-black hover:bg-[#3dbd6d] hover:scale-105 active:scale-95': status === 'future',
+                            'bg-white/10 text-white/30 cursor-not-allowed': status === 'closed'
                         }">
                         {{ statusLabel }}
                     </button>
@@ -141,23 +151,10 @@ const formatDate = (dateString) => {
 </template>
 
 <style scoped>
-/* 가독성이 좋은 Pixelify Sans 또는 Silkscreen 추천 */
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
 
-.pixel-font {
+.game-font {
     font-family: 'Pixelify Sans', sans-serif;
-    text-shadow: none;
-}
-
-.pixel-window {
-    box-shadow: 4px 4px 0px #000000;
-    /* Deep shadow for the window itself */
-    image-rendering: pixels;
-}
-
-.pixel-card {
-    /* 카드 자체의 무거운 그림자 제거 및 미세한 보더 강조 */
-    image-rendering: auto;
 }
 
 .pixelated {
@@ -165,7 +162,6 @@ const formatDate = (dateString) => {
 }
 
 .status-btn {
-    /* 쉐도우 대신 깔끔한 색상 대비 사용 */
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
