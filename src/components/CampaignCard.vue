@@ -8,119 +8,134 @@ const props = defineProps({
     },
     status: {
         type: String,
-        default: 'open' // open, future, closed
+        default: 'open'
     }
 })
 
-// Visual variants based on status
+// 진행률 계산
+const progress = computed(() => {
+    if (!props.campaign.startDate || !props.campaign.endDate) return 0
+    const now = new Date()
+    const start = new Date(props.campaign.startDate)
+    const end = new Date(props.campaign.endDate)
+    if (now < start) return 0
+    if (now > end) return 100
+    const total = end - start
+    const current = now - start
+    return Math.floor((current / total) * 100)
+})
+
 const cardClasses = computed(() => {
     switch (props.status) {
-        case 'closed':
-            return 'opacity-60 grayscale'
-        case 'future':
-            return 'opacity-80'
-        case 'open':
-            return 'hover:-translate-y-1 hover:shadow-[4px_4px_0px_rgba(74,222,128,0.5)]'
-        default:
-            return ''
+        case 'closed': return 'opacity-70 grayscale border-gray-600'
+        case 'future': return 'opacity-90 border-blue-900'
+        case 'open': return 'hover:border-[#4ADE80] hover:shadow-[0_0_20px_rgba(74,222,128,0.2)]'
+        default: return ''
     }
 })
 
 const statusLabel = computed(() => {
     switch (props.status) {
         case 'future': return 'LOCKED'
-        case 'closed': return 'CLOSED'
-        case 'open': return 'START'
+        case 'closed': return 'FINISHED'
+        case 'open': return 'MISSION START'
         default: return 'VIEW'
     }
 })
 
-// Thumbnail fallback
 const thumbnailSrc = computed(() => {
     return props.campaign.thumbnail || props.campaign.image || props.campaign.imageUrl || null
 })
+
+const formatDate = (dateString) => {
+    if (!dateString) return '00.00.00'
+    const date = new Date(dateString)
+    const y = String(date.getFullYear()).slice(-2)
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}.${m}.${d}`
+}
 </script>
 
 <template>
-    <div class="pixel-window flex flex-col w-full h-auto bg-[#1e1e1e] border-2 border-gray-400 box-border transition-all duration-200 group relative"
+    <div class="pixel-card flex flex-col w-full h-[340px] bg-[#0c0c0c] border-[2px] border-white/20 box-border transition-all duration-300 group relative overflow-hidden rounded-sm"
         :class="cardClasses">
 
-        <!-- Header Bar (Retro Window Style) -->
-        <div class="h-8 flex border-b-2 border-gray-400 bg-gray-300">
-            <!-- Segment 1: +++ -->
-            <div class="w-1/6 border-r-2 border-gray-400 flex items-center justify-center bg-[#1e1e1e]">
-                <span class="text-white pixel-font text-[10px] tracking-tighter">+++</span>
+        <div class="h-7 flex items-center justify-between px-3 bg-white/5 border-b border-white/10 z-30">
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-[#4ADE80]" :class="{ 'animate-ping': status === 'open' }"></div>
+                <span class="game-font text-[10px] text-white/50 tracking-widest uppercase">Protocol</span>
             </div>
-            <!-- Segment 2: xxx -->
-            <div class="w-1/4 border-r-2 border-gray-400 flex items-center justify-center bg-gray-300">
-                <span class="text-black pixel-font text-[10px] tracking-widest">xxx</span>
-            </div>
-            <!-- Segment 3: Bars -->
-            <div
-                class="flex-1 border-r-2 border-gray-400 flex items-center justify-center bg-[#1e1e1e] px-1 overflow-hidden">
-                <div class="flex gap-1 w-full justify-center">
-                    <div class="w-2 h-4 bg-gray-500"></div>
-                    <div class="w-2 h-4 bg-gray-500"></div>
-                    <div class="w-2 h-4 bg-white/50"></div>
-                    <div class="w-2 h-4 bg-gray-500"></div>
-                    <div class="w-2 h-4 bg-gray-500"></div>
-                </div>
-            </div>
-            <!-- Segment 4: Controls -->
-            <div class="w-1/5 flex items-center justify-center bg-gray-300 gap-1 px-1">
-                <span class="text-black font-bold text-xs leading-none">-</span>
-                <div class="w-3 h-3 border border-black"></div>
-                <span class="text-black font-bold text-xs leading-none">x</span>
+            <div class="flex gap-1">
+                <div class="w-3 h-[1px] bg-white/30"></div>
+                <div class="w-1 h-[1px] bg-white/30"></div>
             </div>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 p-3 flex flex-col justify-between relative overflow-hidden bg-[#1e1e1e]">
-            <!-- Thumbnail Background (optional) -->
-            <div v-if="thumbnailSrc" class="absolute inset-0 z-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                <img :src="thumbnailSrc" class="w-full h-full object-cover" />
+        <div class="flex-1 flex flex-col relative overflow-hidden">
+
+            <div v-if="thumbnailSrc" class="absolute inset-0 z-0">
+                <img :src="thumbnailSrc"
+                    class="w-full h-full object-cover pixelated opacity-80 transition-transform duration-700 group-hover:scale-105" />
+                <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#0c0c0c]"></div>
             </div>
 
-            <!-- Title Section -->
-            <div class="z-10 bg-[#1e1e1e]/80 border-b border-dashed border-gray-600 pb-2 mb-2 backdrop-blur-sm">
-                <h3 class="text-white pixel-font text-xs md:text-sm leading-tight line-clamp-2">
+            <div class="z-20 p-4 pt-2">
+                <h3 class="text-white game-font text-sm md:text-lg leading-snug tracking-normal">
                     {{ campaign.title }}
                 </h3>
             </div>
 
-            <!-- Info Section -->
-            <div class="z-10 flex-1 flex flex-col justify-center gap-1 text-[10px] md:text-xs text-gray-400 font-sans">
-                <div class="flex items-center gap-2">
-                    <span class="text-green-500">Start:</span>
-                    <span>{{ campaign.startDate?.split('T')[0] }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-red-400">End:</span>
-                    <span>{{ campaign.endDate?.split('T')[0] }}</span>
+            <div
+                class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 px-4 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div class="p-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-sm shadow-2xl">
+                    <p class="text-gray-300 font-sans text-[11px] leading-relaxed">
+                        {{ campaign.description || 'No data available for this sector.' }}
+                    </p>
                 </div>
             </div>
 
-            <!-- Bottom Action Row -->
-            <div class="z-10 mt-3 flex justify-between items-center bg-[#1e1e1e]/90 p-1 border border-gray-700">
-                <div class="w-2 h-2 bg-green-500 animate-pulse rounded-full" v-if="status === 'open'"></div>
-                <div class="w-2 h-2 bg-red-500" v-else-if="status === 'closed'"></div>
-                <div class="w-2 h-2 bg-yellow-500" v-else></div>
+            <div class="mt-auto z-20 p-4">
+                <div class="flex justify-between items-end mb-3">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] text-[#4ADE80] game-font mb-1 opacity-80">TIME_WINDOW</span>
+                        <span class="text-white font-mono text-sm font-medium tracking-tighter">
+                            {{ formatDate(campaign.startDate) }} ~ {{ formatDate(campaign.endDate) }}
+                        </span>
+                    </div>
+                    <span class="text-[10px] text-white/40 font-mono">{{ progress }}%</span>
+                </div>
 
-                <div class="flex-1 mx-2 h-[1px] bg-gray-700"></div>
+                <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-4">
+                    <div class="h-full bg-[#4ADE80] shadow-[0_0_10px_#4ADE80] transition-all duration-1000 ease-out relative"
+                        :style="{ width: progress + '%' }">
+                        <div
+                            class="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] animate-shimmer">
+                        </div>
+                    </div>
+                </div>
 
-                <button class="px-2 py-1 text-[10px] font-bold uppercase transition-colors pixel-font" :class="{
-                    'bg-green-600 text-white hover:bg-green-500': status === 'open',
-                    'bg-gray-700 text-gray-400 cursor-not-allowed': status !== 'open'
-                }">
-                    {{ statusLabel }}
-                </button>
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-1.5">
+                        <div v-for="i in 5" :key="i" class="w-1 h-1 rounded-full"
+                            :class="i / 5 <= progress / 100 ? 'bg-[#4ADE80]' : 'bg-white/10'"></div>
+                    </div>
+
+                    <button class="status-btn px-4 py-1.5 text-[10px] font-bold game-font transition-all rounded-sm"
+                        :class="{
+                            'bg-[#4ADE80] text-black hover:bg-[#3dbd6d] hover:scale-105 active:scale-95': status === 'open',
+                            'bg-white/10 text-white/30 cursor-not-allowed': status !== 'open'
+                        }">
+                        {{ statusLabel }}
+                    </button>
+                </div>
             </div>
 
-            <!-- Closed Overlay for content -->
             <div v-if="status === 'closed'"
-                class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/40 backdrop-grayscale">
-                <div class="bg-red-900/80 border-2 border-red-500 px-2 py-1 -rotate-12">
-                    <span class="text-red-200 pixel-font text-xs">CLOSED</span>
+                class="absolute inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-[1px]">
+                <div class="px-4 py-1 border-y border-white/20 bg-black/40">
+                    <span
+                        class="text-white/40 game-font text-[10px] tracking-[0.3em] uppercase italic">Expedition_End</span>
                 </div>
             </div>
         </div>
@@ -128,13 +143,40 @@ const thumbnailSrc = computed(() => {
 </template>
 
 <style scoped>
-.pixel-font {
-    font-family: 'Press Start 2P', cursive;
+/* 가독성이 좋은 Pixelify Sans 또는 Silkscreen 추천 */
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+
+.game-font {
+    font-family: 'Pixelify Sans', sans-serif;
+    /* 인위적인 쉐도우 제거 */
+    text-shadow: none;
 }
 
-.pixel-window {
-    box-shadow: 4px 4px 0px #000000;
-    /* Deep shadow for the window itself */
+.pixel-card {
+    /* 카드 자체의 무거운 그림자 제거 및 미세한 보더 강조 */
+    image-rendering: auto;
+}
+
+.pixelated {
     image-rendering: pixelated;
+}
+
+.status-btn {
+    /* 쉐도우 대신 깔끔한 색상 대비 사용 */
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.animate-shimmer {
+    animation: shimmer 2s infinite;
 }
 </style>

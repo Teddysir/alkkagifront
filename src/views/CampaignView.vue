@@ -90,11 +90,13 @@ const handleCardClick = (campaign) => {
 
 <template>
     <div
-        class="min-h-screen bg-[#1e1e1e] text-[#d4d4d4] font-mono flex flex-col overflow-hidden relative selection:bg-green-500/30">
+        class="min-h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col overflow-hidden relative selection:bg-pink-500/30">
 
-        <!-- Background Grid Pattern -->
-        <div class="absolute inset-0 pointer-events-none opacity-20"
-            style="background-image: radial-gradient(#4a4a4a 2px, transparent 2px); background-size: 16px 16px;">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0">
+            <img src="@/assets/pixel_city_bg.png" class="w-full h-full object-cover opacity-80" alt="Cyberpunk City" />
+            <!-- Dark Overlay for readability -->
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-[1px]"></div>
         </div>
 
         <!-- Common Header -->
