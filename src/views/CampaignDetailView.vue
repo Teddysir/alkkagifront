@@ -1,4 +1,3 @@
-```vue
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -257,6 +256,18 @@ const handleDeleteProblem = async () => {
     }
 }
 
+const goToSubmission = (item) => {
+    // Check if Active
+    const status = getProblemStatus(item.startDate, item.endDate)
+    if (status !== 'CURRENT') {
+        alert(`PROBLEM IS ${status}. ACCESS DENIED.`)
+        return
+    }
+    // Navigate
+    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
+}
+
+
 const getDifficultyColor = (diff) => {
     // ... same as before
     if (!diff) return 'text-gray-500'
@@ -286,8 +297,10 @@ onMounted(() => {
 // watch for problems to change, then observe new elements
 watch(problems, async () => {
     await nextTick()
-    if (problemElements.value) {
-        problemElements.value.forEach(el => observer.value.observe(el))
+    if (problemElements.value && observer.value) {
+        problemElements.value.forEach(el => {
+            if (el) observer.value.observe(el)
+        })
     }
 })
 </script>
@@ -364,7 +377,6 @@ watch(problems, async () => {
                             <!-- User Join/Withdraw -->
                             <template v-else-if="campaign">
                                 <!-- Withdraw Button (If Joined) -->
-                                DEBUG: isParticipated = {{ campaign.isParticipated }}
                                 <button v-if="campaign.isParticipated" @click="handleWithdraw"
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
                                     <PixelText>[ WITHDRAW ]</PixelText>
@@ -435,25 +447,72 @@ watch(problems, async () => {
                             <div class="w-full md:w-1/2 pl-8 md:pl-12 md:pr-12"
                                 :class="idx % 2 === 0 ? 'md:pl-0 md:pr-12 md:text-right' : 'md:pl-12 md:text-left'">
                                 <div class="bg-black/40 border border-gray-700 hover:border-green-400 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_20px_rgba(74,222,128,0.1)] group cursor-pointer relative overflow-hidden"
-                                    @click="openDetailModal(item.data)">
+                                    @click="goToSubmission(item.data)">
 
                                     <div class="absolute top-0 bottom-0 w-1 bg-green-500/50 transition-all duration-300 group-hover:h-full h-0"
                                         :class="idx % 2 === 0 ? 'right-0' : 'left-0'"></div>
 
+                                    <!-- Admin Delete Button -->
+                                    <button v-if="authStore.isAdmin" @click.stop="openDetailModal(item.data)"
+                                        class="absolute top-2 right-2 text-xs text-red-500 hover:text-white bg-black/50 hover:bg-red-500 px-2 py-1 z-30">
+                                        Admin: Edit
+                                    </button>
+
                                     <div class="flex flex-col gap-1">
-                                        <span class="text-green-500 text-[10px] tracking-widest font-bold mb-1">
-                                            <PixelText>STAGE {{ item.index.toString().padStart(2, '0') }}</PixelText>
-                                        </span>
-                                        <h3 class="text-white text-lg font-bold truncate">{{ item.data.title }}</h3>
-                                        <div class="flex gap-2 text-xs text-gray-500 font-mono mt-2"
+                                        <div class="flex items-center gap-2 mb-1"
+                                            :class="idx % 2 === 0 ? 'md:justify-end' : 'md:justify-start'">
+                                            <span class="text-green-500 text-[10px] tracking-widest font-bold">
+                                                <PixelText>STAGE {{ item.index.toString().padStart(2, '0') }}
+                                                </PixelText>
+                                            </span>
+                                            <span v-if="item.data.problem"
+                                                class="text-[10px] bg-gray-800 text-gray-300 px-1 rounded">
+                                                {{ item.data.problem.platformType }}
+                                            </span>
+                                            <span v-if="item.data.problem" class="text-[10px] font-bold"
+                                                :class="getDifficultyColor(item.data.problem.difficultyType)">
+                                                {{ item.data.problem.difficultyType }}
+                                            </span>
+                                        </div>
+
+                                        <h3 class="text-white text-lg font-bold truncate">{{ item.data.title ||
+                                            (item.data.problem ? item.data.problem.title : 'Loading...') }}</h3>
+
+                                        <!-- Stats Grid -->
+                                        <div
+                                            class="grid grid-cols-4 gap-2 mt-2 border-t border-gray-800 pt-2 text-center">
+                                            <div class="flex flex-col">
+                                                <span class="text-[9px] text-gray-500">PARTICIPANTS</span>
+                                                <span class="text-xs text-white">{{ item.data.participantCount || 0
+                                                }}</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[9px] text-gray-500">SUBMIT</span>
+                                                <span class="text-xs text-white">{{ item.data.submissionCount || 0
+                                                }}</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[9px] text-gray-500">SOLVED</span>
+                                                <span class="text-xs text-green-400">{{ item.data.solvedCount || 0
+                                                }}</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-[9px] text-gray-500">VIEW</span>
+                                                <span class="text-xs text-gray-300">{{ item.data.viewCount || 0
+                                                }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex gap-2 text-xs text-gray-500 font-mono mt-3"
                                             :class="idx % 2 === 0 ? 'md:justify-end' : 'md:justify-start'">
                                             <span>{{ formatDateTime(item.data.startDate) }}</span>
                                             <span>~</span>
                                             <span>{{ formatDateTime(item.data.endDate) }}</span>
                                         </div>
-                                        <!-- Status Indicator for Current Problems -->
+
+                                        <!-- Status Indicator -->
                                         <div v-if="getProblemStatus(item.data.startDate, item.data.endDate) === 'CURRENT'"
-                                            class="mt-2 text-green-400 text-[10px] animate-pulse font-bold">
+                                            class="mt-1 text-green-400 text-[10px] animate-pulse font-bold">
                                             >> CURRENTLY ACTIVE
                                         </div>
                                     </div>
@@ -583,7 +642,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -645,7 +704,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

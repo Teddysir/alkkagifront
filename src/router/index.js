@@ -25,6 +25,16 @@ const router = createRouter({
       component: () => import('../views/CampaignDetailView.vue'),
     },
     {
+      path: '/campaigns/:campaignId/problems/:problemId/submit',
+      name: 'problem-submission',
+      component: () => import('../views/ProblemSubmissionView.vue'),
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/MyPageView.vue'),
+    },
+    {
       path: '/campaign/create',
       name: 'campaign-create',
       component: () => import('../views/CampaignCreateView.vue'),
