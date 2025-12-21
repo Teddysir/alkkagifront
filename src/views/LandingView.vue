@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAlertStore } from '@/stores/alert' // Import
 import CommonHeader from '@/components/CommonHeader.vue'
+import LandingChatInput from '@/components/chat/LandingChatInput.vue'
 
 // 백엔드 개발자로서의 사용자 정보를 기반으로 한 인증 스토어 사용
 const authStore = useAuthStore()
@@ -220,18 +221,7 @@ const goToCampaign = () => {
         </div>
 
         <div class="absolute bottom-[8vh] left-0 w-full flex justify-center px-4">
-          <div class="w-full max-w-3xl">
-            <div
-              class="relative bg-zinc-900/50 backdrop-blur-sm h-16 flex items-center px-6 border-2 border-white/10 hover:border-white/30 transition-all duration-300">
-              <span class="text-gray-400 mr-4 text-2xl font-mono">+</span>
-              <input v-model="promptText" type="text" placeholder="Explore the digital world..."
-                class="bg-transparent text-white placeholder-gray-500 flex-1 outline-none font-mono text-base md:text-lg" />
-              <button
-                class="w-10 h-10 flex items-center justify-center bg-white hover:bg-[#4ADE80] transition-colors ml-2">
-                <span class="text-black font-bold text-xl leading-none">→</span>
-              </button>
-            </div>
-          </div>
+          <LandingChatInput />
         </div>
       </div>
     </transition>
