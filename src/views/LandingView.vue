@@ -2,10 +2,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAlertStore } from '@/stores/alert' // Import
 import CommonHeader from '@/components/CommonHeader.vue'
 
 // 백엔드 개발자로서의 사용자 정보를 기반으로 한 인증 스토어 사용
 const authStore = useAuthStore()
+const alertStore = useAlertStore() // Init
 const router = useRouter()
 
 const showUI = ref(false)
@@ -165,7 +167,7 @@ const goToCampaign = () => {
   if (authStore.isAuthenticated) {
     router.push('/campaigns')
   } else {
-    alert('로그인이 필요한 서비스입니다.')
+    alertStore.showAlert('ACCESS DENIED', '로그인이 필요한 서비스입니다.')
     router.push('/login')
   }
 }

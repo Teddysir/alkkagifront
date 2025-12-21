@@ -11,9 +11,16 @@ export const updateUserProfile = async (data) => {
     return response.data
 }
 
-// url: string
-export const updateProfileImage = async (url) => {
-    const response = await axios.post('/users/profile-images', { profile_image: url })
+// file: File object
+export const updateProfileImage = async (file) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const response = await axios.post('/users/profile-images', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
     return response.data
 }
 

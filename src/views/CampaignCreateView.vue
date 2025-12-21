@@ -4,8 +4,10 @@ import { useRouter } from 'vue-router'
 import { createCampaign } from '@/api/campaign'
 import PixelText from '@/components/PixelText.vue'
 import CommonHeader from '@/components/CommonHeader.vue'
+import { useAlertStore } from '@/stores/alert'
 
 const router = useRouter()
+const alertStore = useAlertStore()
 const isLoading = ref(false)
 
 const form = ref({
@@ -36,7 +38,7 @@ const handleSubmit = async () => {
 
     // Basic validation
     if (!form.value.title || !form.value.startDate || !form.value.endDate) {
-        alert('Please fill in all required fields.')
+        alertStore.showAlert('VALIDATION ERROR', 'Please fill in all required fields.')
         return
     }
 
@@ -64,11 +66,11 @@ const handleSubmit = async () => {
         }
 
         await createCampaign(formData)
-        alert('MISSION CREATED SUCCESSFULLY')
+        await alertStore.showAlert('SUCCESS', 'MISSION CREATED SUCCESSFULLY')
         router.push('/campaigns')
     } catch (error) {
         console.error('Failed to create campaign:', error)
-        alert('FAILED TO DEPLOY MISSION. CHECK CONSOLE.')
+        alertStore.showAlert('ERROR', 'FAILED TO DEPLOY MISSION. CHECK CONSOLE.')
     } finally {
         isLoading.value = false
     }

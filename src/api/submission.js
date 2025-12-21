@@ -2,7 +2,7 @@ import axios from './axios'
 
 // GET /api/v1/submissions/algorithms?keyword={keyword}
 export const searchAlgorithms = async (keyword) => {
-    const response = await axios.get(`/submissions/algorithms`, {
+    const response = await axios.get(`/submissions/algorithm`, {
         params: { keyword }
     })
     return response.data

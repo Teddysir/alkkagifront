@@ -23,12 +23,31 @@ const goToProfile = () => router.push('/profile')
     <nav class="flex justify-between items-center p-6 z-50 transition-all duration-300" :class="[
         transparent ? 'absolute top-0 left-0 w-full bg-transparent' : 'relative border-b border-white/10 bg-[#0c0c0c]/95 backdrop-blur-sm shadow-md'
     ]">
-        <!-- Left: Brand -->
-        <div class="flex items-center gap-3 cursor-pointer group" @click="goHome">
-            <PixelText as="div" variant="title"
-                class="text-white text-3xl tracking-wider group-hover:text-green-400 transition-colors">
-                Alkkagi
-            </PixelText>
+        <!-- Left: Brand & Nav -->
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-3 cursor-pointer group" @click="goHome">
+                <PixelText as="div" variant="title"
+                    class="text-white text-3xl tracking-wider group-hover:text-green-400 transition-colors">
+                    Alkkagi
+                </PixelText>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center gap-6">
+                <!-- Campaign Link -->
+                <button @click="router.push('/campaigns')"
+                    class="text-gray-400 hover:text-white transition-colors text-xs font-bold tracking-widest flex items-center gap-1 group">
+                    <span
+                        class="w-1.5 h-1.5 bg-gray-600 group-hover:bg-purple-500 rounded-full transition-colors"></span>
+                    <PixelText>CAMPAIGN</PixelText>
+                </button>
+                <!-- Notice Link (Placeholder) -->
+                <a href="#"
+                    class="text-gray-400 hover:text-white transition-colors text-xs font-bold tracking-widest flex items-center gap-1 group">
+                    <span class="w-1.5 h-1.5 bg-gray-600 group-hover:bg-blue-500 rounded-full transition-colors"></span>
+                    <PixelText>NOTICE</PixelText>
+                </a>
+            </div>
         </div>
 
         <!-- Right: Auth Actions -->

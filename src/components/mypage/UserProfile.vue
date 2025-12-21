@@ -1,5 +1,6 @@
 <script setup>
 import { ref, defineProps, defineEmits } from 'vue'
+import { useAlertStore } from '@/stores/alert' // Import
 import { updateUserProfile, updateProfileImage, deleteProfileImage } from '@/api/user'
 import { checkNickname } from '@/api/auth'
 import PixelText from '@/components/PixelText.vue'
@@ -10,6 +11,7 @@ const props = defineProps({
     user: Object
 })
 const emit = defineEmits(['refresh'])
+const alertStore = useAlertStore() // Init
 
 // Modals
 const showEditProfileModal = ref(false)
@@ -25,6 +27,7 @@ const nicknameError = ref('')
 
 // Edit Image Form
 const imageUrl = ref('')
+const selectedFile = ref(null) // New ref to hold the actual file
 
 // --- Profile Edit Logic ---
 const openEditProfile = () => {
@@ -40,7 +43,7 @@ const handleCheckNickname = async () => {
     if (editForm.value.nickname === props.user.nickname) {
         nicknameChecked.value = true
         nicknameError.value = ''
-        alert('This is your current nickname.')
+        alertStore.showAlert('INFO', 'This is your current nickname.')
         return
     }
 
@@ -48,17 +51,17 @@ const handleCheckNickname = async () => {
         await checkNickname(editForm.value.nickname)
         nicknameChecked.value = true
         nicknameError.value = ''
-        alert('Nickname available!')
+        alertStore.showAlert('SUCCESS', 'Nickname available!')
     } catch (e) {
         nicknameChecked.value = false
         nicknameError.value = 'Nickname already taken or invalid.'
-        alert('Nickname duplicate!')
+        alertStore.showAlert('ERROR', 'Nickname duplicate!')
     }
 }
 
 const submitEditProfile = async () => {
     if (!nicknameChecked.value) {
-        alert('Please check nickname first.')
+        alertStore.showAlert('WARNING', 'Please check nickname first.')
         return
     }
     try {
@@ -66,27 +69,27 @@ const submitEditProfile = async () => {
             nickname: editForm.value.nickname,
             description: editForm.value.description
         })
-        alert('Profile Updated!')
+        await alertStore.showAlert('SUCCESS', 'Profile Updated!')
         showEditProfileModal.value = false
         emit('refresh')
     } catch (e) {
         console.error(e)
-        alert('Update failed')
+        alertStore.showAlert('ERROR', 'Update failed')
     }
 }
 
 // --- Image Edit Logic ---
 const submitUpdateImage = async () => {
-    if (!imageUrl.value) return
+    if (!selectedFile.value) return
     try {
-        await updateProfileImage(imageUrl.value)
-        alert('Image Updated!')
+        await updateProfileImage(selectedFile.value) // Pass file object
+        await alertStore.showAlert('SUCCESS', 'Image Updated!')
         showEditImageModal.value = false
         imageUrl.value = ''
         emit('refresh')
     } catch (e) {
         console.error(e)
-        alert('Image update failed')
+        alertStore.showAlert('ERROR', 'Image update failed')
     }
 }
 
@@ -94,29 +97,25 @@ const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
 
-    // In a real app, you would upload this file to S3/Cloudinary and get a URL.
-    // For this mock/prototype, we'll read it as DataURL to display it immediately.
-    // The prompt says "profile image edit is /api/v1/users/profile-images POST { profile_image: url }"
-    // So we assume the backend expects a URL.
-    // Since I cannot upload to a real server, I will simulate it by using the Base64 string as the URL
-    // (Note: This might be too long for some databases, but works for frontend demo).
+    selectedFile.value = file // Store file
 
     const reader = new FileReader()
     reader.onload = (e) => {
-        imageUrl.value = e.target.result // Base64 string
+        imageUrl.value = e.target.result // Base64 string for preview
     }
     reader.readAsDataURL(file)
 }
 
 const handleDeleteImage = async () => {
-    if (!confirm('Remove profile image?')) return
+    const result = await alertStore.showConfirm('DELETE', 'Remove profile image?')
+    if (!result) return
     try {
         await deleteProfileImage()
-        alert('Image Removed')
+        await alertStore.showAlert('SUCCESS', 'Image Removed')
         emit('refresh')
     } catch (e) {
         console.error(e)
-        alert('Deletion failed')
+        alertStore.showAlert('ERROR', 'Deletion failed')
     }
 }
 </script>
@@ -181,7 +180,7 @@ const handleDeleteImage = async () => {
                         <div class="flex gap-2">
                             <PixelInput v-model="editForm.nickname" class="flex-1" placeholder="New Nickname"
                                 @input="nicknameChecked = false" />
-                            <PixelButton variant="secondary" @click="handleCheckNickname">CHECK</PixelButton>
+                            <PixelButton variant="secondary" text="CHECK" @click="handleCheckNickname" />
                         </div>
                         <span v-if="nicknameError" class="text-[10px] text-red-500 mt-1">{{ nicknameError }}</span>
                         <span v-if="nicknameChecked && !nicknameError"
@@ -195,8 +194,7 @@ const handleDeleteImage = async () => {
                     </div>
 
                     <div class="flex gap-3 mt-4">
-                        <PixelButton variant="primary" class="flex-1" @click="submitEditProfile">SAVE CHANGES
-                        </PixelButton>
+                        <PixelButton variant="primary" class="flex-1" text="SAVE CHANGES" @click="submitEditProfile" />
                     </div>
                 </div>
             </div>
@@ -228,8 +226,8 @@ const handleDeleteImage = async () => {
                     </div>
 
                     <div class="flex gap-3 mt-4">
-                        <PixelButton variant="primary" class="flex-1" @click="submitUpdateImage">UPLOAD SELECTED
-                        </PixelButton>
+                        <PixelButton variant="primary" class="flex-1" text="UPLOAD SELECTED"
+                            @click="submitUpdateImage" />
                     </div>
                 </div>
             </div>

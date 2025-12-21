@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import LoginForm from '@/components/LoginForm.vue'
 import SignupForm from '@/components/SignupForm.vue'
+import PixelText from '@/components/PixelText.vue'
 import { RouterLink } from 'vue-router'
 
 const activeTab = ref('login') // 'login' or 'signup'
@@ -17,34 +18,31 @@ const handleSignupSuccess = () => {
 
 <template>
   <div class="min-h-screen bg-[#1e1e1e] flex flex-col items-center justify-center font-mono relative overflow-hidden">
-    
+
     <!-- Header -->
     <nav class="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-20">
-      <RouterLink to="/" class="text-white text-3xl font-bold tracking-wider pixel-font hover:text-green-400 cursor-pointer transition-colors no-underline">
-        Alkkagi
+      <RouterLink to="/" class="group flex items-center gap-2 no-underline">
+        <PixelText as="span" variant="title"
+          class="text-white text-3xl tracking-wider group-hover:text-green-400 transition-colors">
+          Alkkagi
+        </PixelText>
       </RouterLink>
     </nav>
 
     <!-- Main Content Box -->
     <div class="z-10 w-full max-w-lg px-4">
       <div class="pixel-box p-8 flex flex-col items-center">
-        
+
         <!-- Tabs -->
         <div class="flex w-full mb-8 border-b-2 border-zinc-700">
-          <button 
-            @click="setTab('login')"
-            class="flex-1 pb-4 text-center transition-colors relative"
-            :class="activeTab === 'login' ? 'text-white' : 'text-gray-500 hover:text-gray-300'"
-          >
+          <button @click="setTab('login')" class="flex-1 pb-4 text-center transition-colors relative"
+            :class="activeTab === 'login' ? 'text-white' : 'text-gray-500 hover:text-gray-300'">
             <span class="tracking-widest text-lg font-bold">LOGIN</span>
             <div v-if="activeTab === 'login'" class="absolute bottom-[-2px] left-0 w-full h-[4px] bg-green-500"></div>
           </button>
-          
-          <button 
-            @click="setTab('signup')"
-            class="flex-1 pb-4 text-center transition-colors relative"
-            :class="activeTab === 'signup' ? 'text-white' : 'text-gray-500 hover:text-gray-300'"
-          >
+
+          <button @click="setTab('signup')" class="flex-1 pb-4 text-center transition-colors relative"
+            :class="activeTab === 'signup' ? 'text-white' : 'text-gray-500 hover:text-gray-300'">
             <span class="tracking-widest text-lg font-bold">SIGN UP</span>
             <div v-if="activeTab === 'signup'" class="absolute bottom-[-2px] left-0 w-full h-[4px] bg-red-500"></div>
           </button>
@@ -60,7 +58,7 @@ const handleSignupSuccess = () => {
     </div>
 
     <!-- Snow Background (Optional, reused from Landing if desired, but kept simple here) -->
-    
+
   </div>
 </template>
 

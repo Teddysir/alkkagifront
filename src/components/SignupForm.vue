@@ -125,10 +125,7 @@ const handleSignup = async () => {
       <div class="flex gap-2 items-start">
         <PixelInput v-model="email" placeholder="example@email.com" class="flex-1" />
         <div class="flex flex-col items-center">
-          <button @click="handleCheckEmail"
-            class="h-14 px-3 bg-zinc-800 text-gray-300 font-mono text-xs border border-gray-600 hover:bg-zinc-700 transition-colors pixel-btn whitespace-nowrap">
-            CHECK
-          </button>
+          <PixelButton text="CHECK" variant="secondary" @click="handleCheckEmail" class="!h-14 !px-4 !text-xs" />
         </div>
       </div>
       <div v-if="emailWarning" class="text-red-400 font-mono text-xs animate-pulse text-right">
@@ -142,10 +139,7 @@ const handleSignup = async () => {
       <div class="flex gap-2 items-start">
         <PixelInput v-model="nickname" placeholder="Player1" class="flex-1" />
         <div class="flex flex-col items-center">
-          <button @click="handleCheckNickname"
-            class="h-14 px-3 bg-zinc-800 text-gray-300 font-mono text-xs border border-gray-600 hover:bg-zinc-700 transition-colors pixel-btn whitespace-nowrap">
-            CHECK
-          </button>
+          <PixelButton text="CHECK" variant="secondary" @click="handleCheckNickname" class="!h-14 !px-4 !text-xs" />
         </div>
       </div>
       <div v-if="nicknameWarning" class="text-red-400 font-mono text-xs animate-pulse text-right">

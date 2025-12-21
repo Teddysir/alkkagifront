@@ -3,12 +3,14 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem, joinCampaign, withdrawCampaign } from '@/api/campaign'
 import { useAuthStore } from '@/stores/auth'
+import { useAlertStore } from '@/stores/alert'
 import CommonHeader from '@/components/CommonHeader.vue'
 import PixelText from '@/components/PixelText.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const alertStore = useAlertStore()
 const campaignId = route.params.id
 
 const isLoading = ref(true)
@@ -74,17 +76,27 @@ const timelineItems = computed(() => {
     const sorted = [...problems.value].sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
 
     for (let i = 0; i < sorted.length; i++) {
-        items.push({ type: 'problem', data: sorted[i], index: i + 1 })
+        // Visibility Logic: Lock after 3rd item if not playing & not active
+        // 0, 1, 2 are visible. 3+ are locked.
+        const isLocked = !campaign.value?.isParticipated && !authStore.isAdmin && i >= 3
+
+        items.push({
+            type: 'problem',
+            data: sorted[i],
+            index: i + 1,
+            isLocked: isLocked
+        })
 
         if (i < sorted.length - 1) {
             const currentEnd = new Date(sorted[i].endDate)
             const nextStart = new Date(sorted[i + 1].startDate)
             if (nextStart > currentEnd) {
                 items.push({
-                    type: 'review_gap', // Renamed to distinguish from the "Review Box" feature 
+                    type: 'review_gap',
                     startDate: sorted[i].endDate,
                     endDate: sorted[i + 1].startDate,
-                    duration: Math.ceil((nextStart - currentEnd) / (1000 * 60 * 60 * 24))
+                    duration: Math.ceil((nextStart - currentEnd) / (1000 * 60 * 60 * 24)),
+                    isLocked: isLocked // Gaps also inherit lock if past the point
                 })
             }
         }
@@ -97,7 +109,7 @@ const fetchData = async () => {
         isLoading.value = true
         const [detailRes, problemsRes] = await Promise.all([
             getCampaignDetail(campaignId),
-            getCampaignProblems(campaignId, { limit: 100 })
+            getCampaignProblems(campaignId, { limit: 40 })
         ])
 
         campaign.value = detailRes.data
@@ -133,33 +145,35 @@ const handleSearch = async () => {
             searchResults.value = []
         }
     } catch (e) {
-        alert('SEARCH FAILED')
+        alertStore.showAlert('ERROR', 'SEARCH FAILED')
     }
 }
 
 // --- Join & Withdraw ---
 const handleJoin = async () => {
-    if (!confirm('JOIN THIS CAMPAIGN?')) return
+    const result = await alertStore.showConfirm('JOIN CAMPAIGN', 'DO YOU WISH TO PARTICIPATE IN THIS MISSION?')
+    if (!result) return
     try {
         await joinCampaign(campaignId)
-        alert('WELCOME TO THE CAMPAIGN')
+        await alertStore.showAlert('SUCCESS', 'WELCOME TO THE CAMPAIGN')
         fetchData()
     } catch (e) {
         console.error(e)
         const msg = e.response?.data?.message || 'FAILED TO JOIN'
-        alert(msg)
+        alertStore.showAlert('ERROR', msg)
     }
 }
 
 const handleWithdraw = async () => {
-    if (!confirm('WARNING: WITHDRAW FROM CAMPAIGN?')) return
+    const result = await alertStore.showConfirm('WITHDRAWAL', 'WARNING: WITHDRAW FROM CAMPAIGN?')
+    if (!result) return
     try {
         await withdrawCampaign(campaignId)
-        alert('WITHDRAWAL COMPLETE')
+        await alertStore.showAlert('SUCCESS', 'WITHDRAWAL COMPLETE')
         fetchData()
     } catch (e) {
         console.error(e)
-        alert('FAILED TO WITHDRAW')
+        alertStore.showAlert('ERROR', 'FAILED TO WITHDRAW')
     }
 }
 
@@ -197,7 +211,7 @@ const submitAddProblems = async () => {
     for (const p of newProblems.value) {
         const dates = newProblemDates.value[p.id]
         if (!dates?.startDate || !dates?.endDate) {
-            alert(`Set dates for: ${p.title}`)
+            alertStore.showAlert('DATE REQUIRED', `Set dates for: ${p.title}`)
             return
         }
     }
@@ -212,14 +226,14 @@ const submitAddProblems = async () => {
 
     try {
         await addCampaignProblems(campaignId, payload)
-        alert('ADDED SUCCESSFULLY')
+        await alertStore.showAlert('SUCCESS', 'ADDED SUCCESSFULLY')
         showAddModal.value = false
         newProblems.value = []
         newProblemDates.value = {}
         searchResults.value = []
         fetchData()
     } catch (e) {
-        alert('FAILED TO ADD')
+        alertStore.showAlert('ERROR', 'FAILED TO ADD')
     }
 }
 
@@ -231,7 +245,8 @@ const openDetailModal = (problem) => {
 
 const handleDeleteProblem = async () => {
     if (!selectedDetailProblem.value) return
-    if (!confirm('WARNING: DELETE THIS STAGE?')) return
+    const result = await alertStore.showConfirm('DELETE', 'WARNING: DELETE THIS STAGE?')
+    if (!result) return
 
     console.log('Attempting to delete:', selectedDetailProblem.value)
     // Try to find the correct ID field. The API likely needs the mapping ID or the problem ID depending on backend implementation.
@@ -240,27 +255,33 @@ const handleDeleteProblem = async () => {
     const targetId = selectedDetailProblem.value.campaignProblemId
 
     if (!targetId) {
-        alert('ERROR: Undefined Problem ID')
+        alertStore.showAlert('ERROR', 'Undefined Problem ID')
         return
     }
 
     try {
         await deleteCampaignProblem(campaignId, targetId)
-        alert('STAGE DELETED')
+        await alertStore.showAlert('SUCCESS', 'STAGE DELETED')
         showDetailModal.value = false
         selectedDetailProblem.value = null
         fetchData()
     } catch (e) {
         console.error(e)
-        alert('DELETE FAILED')
+        alertStore.showAlert('ERROR', 'DELETE FAILED')
     }
 }
 
 const goToSubmission = (item) => {
-    // Check if Active
+    // 1. Check Participation
+    if (!campaign.value?.isParticipated && !authStore.isAdmin) {
+        alertStore.showAlert('ACCESS DENIED', 'JOIN CAMPAIGN FIRST')
+        return
+    }
+
+    // 2. Check if Active
     const status = getProblemStatus(item.startDate, item.endDate)
-    if (status !== 'CURRENT') {
-        alert(`PROBLEM IS ${status}. ACCESS DENIED.`)
+    if (status !== 'CURRENT' && !authStore.isAdmin) {
+        alertStore.showAlert('ACCESS DENIED', `PROBLEM IS ${status}`)
         return
     }
     // Navigate
@@ -417,7 +438,8 @@ watch(problems, async () => {
                         <div v-if="item.type === 'problem'" ref="problemElements"
                             class="relative flex items-center mb-8 md:mb-12 min-h-[150px] fade-in-section" :class="[
                                 idx % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row',
-                                getProblemStatus(item.data.startDate, item.data.endDate) === 'FUTURE' && !authStore.isAdmin ? 'foggy-future' : ''
+                                getProblemStatus(item.data.startDate, item.data.endDate) === 'FUTURE' && !authStore.isAdmin && !campaign?.isParticipated ? 'foggy-future' : '',
+                                item.isLocked ? 'foggy-locked' : ''
                             ]">
 
                             <!-- Timeline Dot -->
@@ -452,13 +474,28 @@ watch(problems, async () => {
                                     <div class="absolute top-0 bottom-0 w-1 bg-green-500/50 transition-all duration-300 group-hover:h-full h-0"
                                         :class="idx % 2 === 0 ? 'right-0' : 'left-0'"></div>
 
-                                    <!-- Admin Delete Button -->
-                                    <button v-if="authStore.isAdmin" @click.stop="openDetailModal(item.data)"
-                                        class="absolute top-2 right-2 text-xs text-red-500 hover:text-white bg-black/50 hover:bg-red-500 px-2 py-1 z-30">
-                                        Admin: Edit
-                                    </button>
+                                    <!-- STATUS BAR (Admin Edit & Submitted Badge) -->
+                                    <div class="absolute top-2 z-30 flex gap-2 items-center"
+                                        :class="idx % 2 === 0 ? 'left-2 flex-row' : 'right-2 flex-row-reverse'">
 
-                                    <div class="flex flex-col gap-1">
+                                        <!-- ADMIN: EDIT -->
+                                        <button v-if="authStore.isAdmin" @click.stop="openDetailModal(item.data)"
+                                            class="text-[10px] uppercase font-bold text-red-500 hover:text-white bg-black/80 hover:bg-red-600 px-2 py-1 border border-red-500/30 transition-colors">
+                                            [ ADMIN: EDIT ]
+                                        </button>
+
+                                        <!-- USER: SUBMITTED BADGE -->
+                                        <div v-if="item.data.submitted"
+                                            class="text-[10px] uppercase font-bold text-black bg-green-500 px-2 py-1 border border-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]">
+                                            [ SUBMITTED ]
+                                        </div>
+                                        <div v-if="!item.data.submitted"
+                                            class="text-[10px] uppercase font-bold text-black bg-red-500 px-2 py-1 border border-red-400 shadow-[0_0_5px_rgba(222,74,74,0.5)]">
+                                            [ NOT SUBMITTED ]
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-1 pt-4">
                                         <div class="flex items-center gap-2 mb-1"
                                             :class="idx % 2 === 0 ? 'md:justify-end' : 'md:justify-start'">
                                             <span class="text-green-500 text-[10px] tracking-widest font-bold">
@@ -466,7 +503,8 @@ watch(problems, async () => {
                                                 </PixelText>
                                             </span>
                                             <span v-if="item.data.problem"
-                                                class="text-[10px] bg-gray-800 text-gray-300 px-1 rounded">
+                                                class="text-[10px] bg-gray-800 text-gray-300 px-1.5 py-0.5"
+                                                style="border-radius: 2px;">
                                                 {{ item.data.problem.platformType }}
                                             </span>
                                             <span v-if="item.data.problem" class="text-[10px] font-bold"
@@ -475,38 +513,39 @@ watch(problems, async () => {
                                             </span>
                                         </div>
 
-                                        <h3 class="text-white text-lg font-bold truncate">{{ item.data.title ||
-                                            (item.data.problem ? item.data.problem.title : 'Loading...') }}</h3>
+                                        <h3 class="text-white text-lg font-bold truncate tracking-wide font-sans mb-2">
+                                            {{ item.data.title || (item.data.problem ? item.data.problem.title :
+                                                'Loading...') }}</h3>
 
-                                        <!-- Stats Grid -->
+                                        <!-- Stats Grid (Refined) -->
                                         <div
-                                            class="grid grid-cols-4 gap-2 mt-2 border-t border-gray-800 pt-2 text-center">
-                                            <div class="flex flex-col">
-                                                <span class="text-[9px] text-gray-500">PARTICIPANTS</span>
-                                                <span class="text-xs text-white">{{ item.data.participantCount || 0
-                                                }}</span>
+                                            class="grid grid-cols-3 gap-0 mt-3 border-t border-b border-gray-800 bg-white/5">
+                                            <div
+                                                class="flex flex-col items-center py-2 border-r border-gray-800/50 last:border-0">
+                                                <span
+                                                    class="text-[8px] text-gray-400 tracking-wider mb-1">PARTICIPANTS</span>
+                                                <span class="text-sm font-bold text-white font-mono">{{
+                                                    item.data.participantCount || 0 }}</span>
                                             </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-[9px] text-gray-500">SUBMIT</span>
-                                                <span class="text-xs text-white">{{ item.data.submissionCount || 0
-                                                }}</span>
+                                            <div
+                                                class="flex flex-col items-center py-2 border-r border-gray-800/50 last:border-0">
+                                                <span class="text-[8px] text-gray-400 tracking-wider mb-1">SUBMIT</span>
+                                                <span class="text-sm font-bold text-white font-mono">{{
+                                                    item.data.submissionCount || 0 }}</span>
                                             </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-[9px] text-gray-500">SOLVED</span>
-                                                <span class="text-xs text-green-400">{{ item.data.solvedCount || 0
-                                                }}</span>
+                                            <div
+                                                class="flex flex-col items-center py-2 border-r border-gray-800/50 last:border-0">
+                                                <span class="text-[8px] text-gray-400 tracking-wider mb-1">SOLVED</span>
+                                                <span class="text-sm font-bold text-green-400 font-mono">{{
+                                                    item.data.solvedCount || 0 }}</span>
                                             </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-[9px] text-gray-500">VIEW</span>
-                                                <span class="text-xs text-gray-300">{{ item.data.viewCount || 0
-                                                }}</span>
-                                            </div>
+
                                         </div>
 
-                                        <div class="flex gap-2 text-xs text-gray-500 font-mono mt-3"
+                                        <div class="flex gap-2 text-[12px] text-gray-500 font-mono mt-3"
                                             :class="idx % 2 === 0 ? 'md:justify-end' : 'md:justify-start'">
                                             <span>{{ formatDateTime(item.data.startDate) }}</span>
-                                            <span>~</span>
+                                            <span> ~ </span>
                                             <span>{{ formatDateTime(item.data.endDate) }}</span>
                                         </div>
 
@@ -642,7 +681,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -704,7 +743,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
@@ -753,5 +792,14 @@ watch(problems, async () => {
     pointer-events: none;
     user-select: none;
     transition: all 0.5s;
+}
+
+/* Locked Foggy Effect for Non-Participants */
+.foggy-locked {
+    filter: blur(10px) grayscale(100%);
+    opacity: 0.3;
+    pointer-events: none;
+    user-select: none;
+    cursor: not-allowed;
 }
 </style>
