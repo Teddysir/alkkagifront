@@ -48,6 +48,18 @@ const router = createRouter({
         }
       }
     },
+    {
+      path: '/campaigns/:campaignId/problems/:problemId/review',
+      name: 'ReviewMatch',
+      component: () => import('../views/ReviewMatchView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/submission/:id',
+      name: 'submission-detail',
+      component: () => import('../views/SubmissionDetailView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 })
 

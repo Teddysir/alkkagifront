@@ -243,7 +243,11 @@ const openDetailModal = (problem) => {
     showDetailModal.value = true
 }
 
-const handleDeleteProblem = async () => {
+const handleDeleteProblem = async (problem = null) => {
+    // Check if problem is a valid object (not an Event) to avoid overwriting state with MouseEvent
+    if (problem && problem.campaignProblemId) {
+        selectedDetailProblem.value = problem
+    }
     if (!selectedDetailProblem.value) return
     const result = await alertStore.showConfirm('DELETE', 'WARNING: DELETE THIS STAGE?')
     if (!result) return
@@ -286,6 +290,11 @@ const goToSubmission = (item) => {
     }
     // Navigate
     router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
+}
+
+const goToReview = (item) => {
+    // Navigate to Review Match Page
+    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/review`)
 }
 
 
@@ -451,17 +460,22 @@ watch(problems, async () => {
                             <div class="hidden md:flex w-1/2 px-12 items-center"
                                 :class="idx % 2 === 0 ? 'justify-start' : 'justify-end'">
                                 <!-- REVIEW BOX (Only if Ended) -->
-                                <div v-if="isProblemEnded(item.data.endDate)"
-                                    class="relative p-4 border border-purple-500/30 bg-purple-900/10 backdrop-blur-sm w-full max-w-sm group cursor-pointer hover:border-purple-500 transition-all">
-                                    <h4 class="text-purple-300 font-bold mb-1 text-sm">
-                                        <PixelText>STAGE REVIEW</PixelText>
+                                <div v-if="isProblemEnded(item.data.endDate)" @click="goToReview(item.data)"
+                                    class="relative p-4 border border-purple-500/30 bg-purple-900/10 backdrop-blur-sm w-full max-w-sm group cursor-pointer hover:border-purple-500 transition-all hover:bg-purple-900/20 shadow-[0_0_0_rgba(168,85,247,0)] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                                    <h4 class="text-purple-300 font-bold mb-1 text-sm group-hover:text-purple-200">
+                                        <PixelText>> START REVIEW</PixelText>
                                     </h4>
-                                    <p class="text-[10px] text-purple-200/50">Analysis complete. Access archived data?
+                                    <p class="text-[10px] text-purple-200/50 group-hover:text-purple-200/80">
+                                        Matching complete. View assignments and start code review.
                                     </p>
 
                                     <!-- Review Decoration -->
-                                    <div class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500"></div>
-                                    <div class="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-500"></div>
+                                    <div
+                                        class="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 group-hover:animate-ping">
+                                    </div>
+                                    <div
+                                        class="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-500 group-hover:animate-ping">
+                                    </div>
                                 </div>
                             </div>
 
@@ -478,10 +492,10 @@ watch(problems, async () => {
                                     <div class="absolute top-2 z-30 flex gap-2 items-center"
                                         :class="idx % 2 === 0 ? 'left-2 flex-row' : 'right-2 flex-row-reverse'">
 
-                                        <!-- ADMIN: EDIT -->
-                                        <button v-if="authStore.isAdmin" @click.stop="openDetailModal(item.data)"
+                                        <!-- ADMIN: DELETE -->
+                                        <button v-if="authStore.isAdmin" @click.stop="handleDeleteProblem(item.data)"
                                             class="text-[10px] uppercase font-bold text-red-500 hover:text-white bg-black/80 hover:bg-red-600 px-2 py-1 border border-red-500/30 transition-colors">
-                                            [ ADMIN: EDIT ]
+                                            [ DELETE ]
                                         </button>
 
                                         <!-- USER: SUBMITTED BADGE -->
@@ -681,7 +695,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -743,7 +757,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
@@ -756,7 +770,7 @@ watch(problems, async () => {
                         ACCESS TERMINAL [LINK]
                     </a>
 
-                    <button v-if="authStore.isAdmin" @click="handleDeleteProblem"
+                    <button v-if="authStore.isAdmin" @click="() => handleDeleteProblem()"
                         class="block w-full py-3 mt-4 text-center border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors font-bold text-xs tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.2)]">
                         // ADMIN OVERRIDE: DELETE
                     </button>

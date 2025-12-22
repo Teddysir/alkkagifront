@@ -14,4 +14,13 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/code-cdn': {
+        target: 'https://d3ud9ocg2cusae.cloudfront.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/code-cdn/, '')
+      }
+    }
+  }
 });

@@ -1,0 +1,346 @@
+<script setup>
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
+import { getSubmissionDetail } from '@/api/submission'
+import { getProblemDetail } from '@/api/problem'
+import CommonHeader from '@/components/CommonHeader.vue'
+import PixelText from '@/components/PixelText.vue'
+import ReviewList from '@/components/review/ReviewList.vue'
+
+const route = useRoute()
+const submissionId = route.params.id
+
+const isLoading = ref(true)
+const submission = ref(null)
+const problem = ref({})
+
+// Editor Refs
+const editorContainer = ref(null)
+const editorHeight = ref(500) // Default min height
+let editorInstance = null
+
+// Global script loading state (Copied from ProblemSubmissionView)
+const monacoLoaded = ref(false)
+const markedLoaded = ref(false)
+const parsedStrategyHtml = ref('')
+
+const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = src
+        script.onload = resolve
+        script.onerror = reject
+        document.body.appendChild(script)
+    })
+}
+
+const getMonacoLanguage = (lang) => {
+    switch (lang) {
+        case 'JAVA': return 'java'
+        case 'C++': return 'cpp'
+        case 'PYTHON': return 'python'
+        case 'JAVASCRIPT': return 'javascript'
+        default: return 'plaintext'
+    }
+}
+
+const initEditors = async () => {
+    // Load Marked
+    if (!window.marked) {
+        await loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js')
+    }
+    markedLoaded.value = true
+
+    // Parse Strategy
+    if (submission.value?.strategy) {
+        parsedStrategyHtml.value = window.marked.parse(submission.value.strategy)
+    }
+
+    // Load Monaco
+    if (window.monaco) {
+        createEditor()
+    } else {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.js')
+        window.require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } })
+        window.require(['vs/editor/editor.main'], () => {
+            monacoLoaded.value = true
+            createEditor()
+        })
+    }
+}
+
+const createEditor = () => {
+    if (editorContainer.value && !editorInstance && submission.value) {
+        editorInstance = window.monaco.editor.create(editorContainer.value, {
+            value: submission.value.code,
+            language: getMonacoLanguage(submission.value.language),
+            theme: 'vs-dark',
+            fontFamily: "'DungGeunMo', monospace",
+            fontSize: 14,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            padding: { top: 16, bottom: 16 },
+            readOnly: true,
+            domReadOnly: true,
+            scrollbar: {
+                vertical: 'hidden', // Hide vertical scrollbar since we auto-grow
+                handleMouseWheel: false // Let parent scroll
+            }
+        })
+
+        // Auto-grow logic
+        const updateHeight = () => {
+            const contentHeight = editorInstance.getContentHeight()
+            // Constrain min height 500
+            editorHeight.value = Math.max(500, contentHeight)
+            // Force layout update if needed, though automaticLayout might handle container resize if we change style
+            // But we change container style, so automaticLayout observes it.
+        }
+
+        editorInstance.onDidContentSizeChange(updateHeight)
+
+        // Initial sizing
+        updateHeight()
+    }
+}
+
+const fetchData = async () => {
+    try {
+        isLoading.value = true
+        // 1. 제출 상세 정보 조회
+        const res = await getSubmissionDetail(submissionId)
+        submission.value = res.data || res
+
+        // 2. 문제 정보 조회 (필요시)
+        if (submission.value.programProblemId) {
+            const pRes = await getProblemDetail(submission.value.programProblemId)
+            problem.value = pRes.data
+        }
+
+        // 3. 코드 원문 가져오기 (CloudFront URL인 경우)
+        if (submission.value.code && submission.value.code.startsWith('http')) {
+            try {
+                // Proxy URL creation
+                let fetchUrl = submission.value.code;
+                const cloudfrontDomain = 'd3ud9ocg2cusae.cloudfront.net';
+
+                if (fetchUrl.includes(cloudfrontDomain)) {
+                    // Replace domain with local proxy path
+                    // e.g. https://domain.net/path -> /code-cdn/path
+                    fetchUrl = fetchUrl.replace(`https://${cloudfrontDomain}`, '/code-cdn');
+                }
+
+                const response = await fetch(fetchUrl, {
+                    method: 'GET'
+                })
+
+                if (!response.ok) throw new Error("Network response was not ok")
+
+                const text = await response.text()
+                submission.value.code = text // URL을 실제 코드로 교체
+
+                // 만약 에디터가 이미 생성되어 있다면 값을 새로 세팅
+                if (editorInstance) {
+                    editorInstance.setValue(text)
+                }
+            } catch (err) {
+                console.error("CloudFront Fetch Error:", err)
+                submission.value.code = "// [ERROR] 소스 코드를 불러오는 데 실패했습니다.\n// CORS 설정 혹은 파일 경로를 확인하세요."
+            }
+        }
+
+        // 4. 에디터 및 마크다운 초기화
+        // DOM이 렌더링된 후 에디터를 생성해야 하므로 isLoading을 먼저 끄고 nextTick 대기
+        isLoading.value = false
+        await nextTick()
+        await initEditors()
+
+    } catch (error) {
+        console.error("Failed to load data", error)
+        alert("데이터를 로드하는 중 오류가 발생했습니다.")
+        isLoading.value = false
+    }
+    // finally 블록 제거 (위에서 처리함)
+}
+
+onMounted(() => {
+    fetchData()
+})
+
+onBeforeUnmount(() => {
+    if (editorInstance) editorInstance.dispose()
+})
+</script>
+
+<template>
+    <div
+        class="h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative overflow-hidden selection:bg-green-500/30">
+        <!-- Background -->
+        <div class="absolute inset-0 z-0">
+            <img src="@/assets/pixel_city_bg.png" class="w-full h-full object-cover opacity-60 fixed"
+                alt="Cyberpunk City" />
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm fixed"></div>
+        </div>
+
+        <CommonHeader class="shrink-0 relative z-20" />
+
+        <div v-if="isLoading" class="relative z-10 flex-1 flex items-center justify-center">
+            <div class="text-green-500 animate-pulse text-xl font-bold">
+                <PixelText>> LOADING_DATA...</PixelText>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div v-else-if="submission"
+            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 h-full overflow-hidden">
+
+            <!-- LEFT COLUMN: Problem + Code + Reviews -->
+            <div class="flex-1 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar min-w-0 pr-2">
+
+                <!-- Problem Info Card -->
+                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shrink-0 shadow-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <h2 class="text-xl text-white font-bold truncate pr-4">
+                            <PixelText>{{ problem.title || 'Loading...' }}</PixelText>
+                        </h2>
+                        <a :href="problem.problemLink" target="_blank"
+                            class="text-xs text-blue-400 hover:underline shrink-0">[ OPEN LINK ]</a>
+                    </div>
+                    <div class="flex gap-4 text-xs text-gray-400">
+                        <span>NO: {{ problem.problemNo }}</span>
+                        <span>PLATFORM: {{ problem.platformType }}</span>
+                        <span
+                            :class="{ 'text-green-400': problem.difficultyType === 'EASY', 'text-red-400': problem.difficultyType === 'HARD' }">
+                            LV: {{ problem.difficultyType }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Code Viewer -->
+                <div
+                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col min-h-[500px] shadow-lg relative shrink-0">
+                    <div class="bg-[#2d2d2d] p-2 flex justify-between items-center border-b border-gray-700 shrink-0">
+                        <span class="text-xs text-gray-400 font-bold px-2">SOURCE CODE ({{ submission.language
+                        }})</span>
+                        <!-- Copy Button could go here -->
+                    </div>
+                    <div ref="editorContainer" class="flex-1 w-full relative" :style="{ height: editorHeight + 'px' }">
+                    </div>
+                </div>
+
+                <!-- Reviews Section -->
+                <div class="pb-10">
+                    <ReviewList :submission-id="submissionId" />
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Stats & Strategy -->
+            <div class="w-full md:w-[400px] flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar shrink-0 pb-4">
+
+                <!-- User Info -->
+                <!-- <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 flex items-center gap-3 shadow-lg">
+                    <div class="w-10 h-10 rounded bg-gray-800 border border-gray-600 overflow-hidden">
+                        <img v-if="submission.userInfoResponseDto?.profileImage"
+                            :src="submission.userInfoResponseDto.profileImage" class="w-full h-full object-cover">
+                        <span v-else class="flex items-center justify-center h-full text-xs text-gray-400">{{
+                            submission.userInfoResponseDto?.nickname?.charAt(0) }}</span>
+                    </div>
+                    <div>
+                        <div class="text-sm text-white font-bold">{{ submission.userInfoResponseDto?.nickname }}</div>
+                        <div class="text-xs text-gray-500">Submitted at {{ new
+                            Date(submission.createdAt).toLocaleString() }}</div>
+                    </div>
+                </div> -->
+
+                <!-- Algo Tags -->
+                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg">
+                    <label class="text-xs text-gray-400 font-bold block mb-2">ALGORITHM TAGS</label>
+                    <div class="flex flex-wrap gap-2">
+                        <span v-for="algo in submission.algorithmList" :key="algo.id"
+                            class="px-2 py-1 bg-green-900/40 border border-green-500/50 text-green-400 text-[10px] rounded">
+                            {{ algo.name }}
+                        </span>
+                        <span v-if="!submission.algorithmList?.length" class="text-xs text-gray-600">No tags</span>
+                    </div>
+                </div>
+
+                <!-- Exec Stats -->
+                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg">
+                    <h3 class="text-sm text-purple-400 font-bold border-b border-purple-500/30 pb-2 mb-3">EXECUTION
+                        STATS</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <span class="text-[10px] text-gray-500 block mb-1">TIME</span>
+                            <span class="text-sm text-white font-mono">{{ submission.execTime }} ms</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-500 block mb-1">MEMORY</span>
+                            <span class="text-sm text-white font-mono">{{ Math.round(submission.memory / 1024) }}
+                                MB</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 block mb-1">RESULT</span>
+                        <span class="text-sm font-bold"
+                            :class="submission.isSuccess ? 'text-green-500' : 'text-red-500'">
+                            {{ submission.isSuccess ? 'PASS' : 'FAIL' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Strategy Display -->
+                <div
+                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col shadow-lg overflow-hidden flex-1 min-h-[300px]">
+                    <div class="bg-[#2d2d2d] p-2 border-b border-gray-700 shrink-0">
+                        <span class="text-xs text-gray-400 font-bold">STRATEGY</span>
+                    </div>
+                    <div class="p-4 bg-black/50 custom-scrollbar overflow-y-auto flex-1 markdown-preview"
+                        v-html="parsedStrategyHtml"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #444;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Reuse markdown styles */
+.markdown-preview {
+    font-family: 'DungGeunMo', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #d4d4d4;
+}
+
+:deep(.markdown-preview h1),
+:deep(.markdown-preview h2),
+:deep(.markdown-preview h3) {
+    color: #4ade80;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.2em;
+}
+
+/* ... etc (Simplified for brevity as they are scoped) ... */
+</style>

@@ -38,9 +38,7 @@ export const addCampaignProblems = async (campaignId, payload) => {
 }
 
 export const deleteCampaignProblem = async (campaignId, problemId) => {
-    // Note: User did not specify exact endpoint but standard REST is DELETE /campaigns/:id/problems/:pid
-    // Or maybe just DELETE /campaigns/problems/:id?
-    // Based on "CampaignDetailView ... delete button", I'll assume standard nested resource.
+    // DELETE /campaigns/{campaignId}/problems?campaignProblemId={problemId}
     const response = await axios.delete(`/campaigns/${campaignId}/problems/${problemId}`)
     return response.data
 }

@@ -8,12 +8,36 @@ import PixelText from '@/components/PixelText.vue'
 import PixelButton from '@/components/PixelButton.vue'
 import PixelInput from '@/components/PixelInput.vue'
 
+import PixelDefaultAlert from '@/components/alerts/PixelDefaultAlert.vue'
+import PixelErrorAlert from '@/components/alerts/PixelErrorAlert.vue'
+
 const route = useRoute()
 const router = useRouter()
 const { campaignId, problemId } = route.params
 
 const isLoading = ref(true)
 const problem = ref({})
+
+// Alert State
+const showAlert = ref(false)
+const alertMessage = ref('')
+const isAlertError = ref(false)
+const onAlertConfirm = ref(null)
+
+const triggerAlert = (message, isError = false, confirmCallback = null) => {
+    alertMessage.value = message
+    isAlertError.value = isError
+    onAlertConfirm.value = confirmCallback
+    showAlert.value = true
+}
+
+const closeAlert = () => {
+    if (onAlertConfirm.value) {
+        onAlertConfirm.value()
+    }
+    showAlert.value = false
+    onAlertConfirm.value = null
+}
 
 const defaultCodeTemplates = {
     'JAVA': `public class Main {
@@ -35,7 +59,7 @@ int main() {
     'PYTHON': `import sys
 
 def solution():
-    # Write your code here
+    // Write your code here
     pass
 
 if __name__ == '__main__':
@@ -73,6 +97,7 @@ let strategyInstance = null // New instance for Markdown
 const strategyMode = ref('WRITE') // WRITE | PREVIEW
 const parsedStrategyHtml = ref('')
 
+
 // Fetch Problem Detail
 const fetchDetail = async () => {
     try {
@@ -82,11 +107,69 @@ const fetchDetail = async () => {
         problem.value = res.data
     } catch (e) {
         console.error(e)
-        alert('Failed to load problem details')
+        triggerAlert('Failed to load problem details', true)
     } finally {
         isLoading.value = false
     }
 }
+
+// ... Algorithm Logic ...
+
+// Submit Logic
+const handleSubmit = async () => {
+    // Sync code from editor just in case
+    if (editorInstance) {
+        code.value = editorInstance.getValue()
+    }
+    // Sync strategy from editor
+    if (strategyInstance) {
+        strategy.value = strategyInstance.getValue()
+    }
+
+    if (!code.value || !strategy.value) {
+        triggerAlert('Please fill in all fields (Code & Strategy).', true)
+        return
+    }
+
+    const payload = {
+        language: language.value,
+        code: code.value,
+        strategy: strategy.value,
+        execTime: Number(execTime.value),
+        memory: Number(memory.value),
+        isSuccess: isSuccess.value,
+        algorithmList: selectedAlgorithms.value.map(a => a.name)
+    }
+
+    try {
+        await submitCode(problemId, payload)
+        triggerAlert('SUBMISSION COMPLETE!', false, () => {
+            router.push(`/campaigns/${campaignId}`)
+        })
+    } catch (e) {
+        console.error(e)
+        triggerAlert('Submission Failed', true)
+    }
+}
+
+// ... Languages ...
+
+// Global script loading state
+const monacoLoaded = ref(false)
+const markedLoaded = ref(false)
+
+// ... loadScript, initEditors, createEditors ...
+// Since this block is large, I should limit replacement scope carefully or ensure I copy *everything* correctly.
+// I will target the imports and helper definitions first to minimize risk.
+// Wait, I can't target imports easily if I only select part of the file. 
+// I will implement alerts state and imports in one go.
+// The rest of logic (templates, etc) is unchanged, I will use ... if allowed, but replacement must be exact.
+// I will re-write carefully.
+
+// NO, this file is huge. I should use `multi_replace_file_content` or targeted `replace_file_content`.
+// I will start by adding imports and state at the top.
+
+
 
 // Algorithm Logic
 const handleAlgoSearch = async () => {
@@ -111,41 +194,7 @@ const removeAlgorithm = (index) => {
     selectedAlgorithms.value.splice(index, 1)
 }
 
-// Submit Logic
-const handleSubmit = async () => {
-    // Sync code from editor just in case
-    if (editorInstance) {
-        code.value = editorInstance.getValue()
-    }
-    // Sync strategy from editor
-    if (strategyInstance) {
-        strategy.value = strategyInstance.getValue()
-    }
 
-    if (!code.value || !strategy.value) {
-        alert('Please fill in all fields (Code & Strategy).')
-        return
-    }
-
-    const payload = {
-        language: language.value,
-        code: code.value,
-        strategy: strategy.value,
-        execTime: Number(execTime.value),
-        memory: Number(memory.value),
-        isSuccess: isSuccess.value,
-        algorithmList: selectedAlgorithms.value.map(a => a.name)
-    }
-
-    try {
-        await submitCode(problemId, payload)
-        alert('SUBMISSION COMPLETE!')
-        router.push(`/campaigns/${campaignId}`)
-    } catch (e) {
-        console.error(e)
-        alert('Submission Failed')
-    }
-}
 
 const languages = ['JAVA', 'C++', 'PYTHON', 'JAVASCRIPT']
 
@@ -159,9 +208,7 @@ const getMonacoLanguage = (lang) => {
     }
 }
 
-// Global script loading state
-const monacoLoaded = ref(false)
-const markedLoaded = ref(false)
+
 
 const loadScript = (src) => {
     return new Promise((resolve, reject) => {
@@ -296,6 +343,13 @@ onBeforeUnmount(() => {
 <template>
     <div
         class="h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative overflow-hidden selection:bg-green-500/30">
+
+        <!-- Alerts -->
+        <PixelDefaultAlert v-if="showAlert && !isAlertError" :message="alertMessage" @confirm="closeAlert"
+            @cancel="closeAlert" />
+        <PixelErrorAlert v-if="showAlert && isAlertError" title="ERROR" :message="alertMessage" @confirm="closeAlert"
+            @cancel="closeAlert" />
+
         <!-- Background -->
         <div class="absolute inset-0 z-0">
             <img src="@/assets/pixel_city_bg.png" class="w-full h-full object-cover opacity-60 fixed"
