@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { login as loginApi } from '@/api/auth'
+import { login as loginApi, logout as logoutApi } from '@/api/auth'
 import { checkIsAdmin } from '@/api/axios' // axios.js에서 만든 함수 가져오기
 
 export const useAuthStore = defineStore('auth', () => {
@@ -27,8 +27,6 @@ export const useAuthStore = defineStore('auth', () => {
             const rawToken = response.headers['authorization']
             if (rawToken) {
                 const cleanToken = rawToken.startsWith('Bearer ') ? rawToken.split(' ')[1] : rawToken
-
-                // localStorage와 ref를 동시에 업데이트해야 반응형이 작동합니다.
                 localStorage.setItem('Authorization', cleanToken)
                 token.value = cleanToken
             }
@@ -46,11 +44,17 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    const logout = () => {
-        localStorage.removeItem('Authorization')
-        localStorage.removeItem('user')
-        user.value = null
-        token.value = null // 토큰 초기화
+    const logout = async () => {
+        try {
+            await logoutApi()
+        } catch (error) {
+            console.error('Logout API failed:', error)
+        } finally {
+            localStorage.removeItem('Authorization')
+            localStorage.removeItem('user')
+            user.value = null
+            token.value = null
+        }
     }
 
     // 반드시 모든 변수와 함수를 return해야 외부(Header 등)에서 쓸 수 있습니다.

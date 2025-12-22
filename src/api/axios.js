@@ -3,6 +3,7 @@ import axios from 'axios'
 const instance = axios.create({
     baseURL: 'http://localhost:8080/api/v1',
     headers: { 'Content-Type': 'application/json' },
+    withCredentials: true,
 })
 
 instance.interceptors.request.use((config) => {
@@ -29,5 +30,26 @@ export const checkIsAdmin = (token) => {
     const payload = decodeToken(token)
     return payload?.role === 'ROLE_ADMIN'
 }
+
+instance.interceptors.response.use(
+    (response) => {
+        const newAccessToken = response.headers['authorization']
+        if (newAccessToken) {
+            const cleanToken = newAccessToken.startsWith('Bearer ') ? newAccessToken.split(' ')[1] : newAccessToken
+
+            localStorage.setItem('Authorization', cleanToken)
+
+        }
+        return response
+    },
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('Authorization')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+        }
+        return Promise.reject(error)
+    }
+)
 
 export default instance

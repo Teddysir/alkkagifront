@@ -1,5 +1,11 @@
 import axios from './axios'
 
+
+export const logout = async () => {
+    const response = await axios.post('/users/logout')
+    return response.data
+}
+
 export const login = async (email, password) => {
     const response = await axios.post('/users/login', { email, password });
     return response;
