@@ -4,22 +4,22 @@ import { useRouter } from 'vue-router'
 import PixelInput from '@/components/PixelInput.vue'
 import PixelButton from '@/components/PixelButton.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useAlertStore } from '@/stores/alert'
 
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
-const errorMessage = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
+const alertStore = useAlertStore()
 
 const handleLogin = async () => {
   if (!email.value || !password.value) {
-    errorMessage.value = '이메일과 비밀번호를 입력해주세요.'
+    await alertStore.showAlert('MISSING INPUT', '이메일과 비밀번호를 입력해주세요.')
     return
   }
 
   isLoading.value = true
-  errorMessage.value = ''
 
   try {
     const success = await authStore.login(email.value, password.value)
@@ -28,7 +28,7 @@ const handleLogin = async () => {
     }
   } catch (error) {
     console.error(error)
-    errorMessage.value = '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.'
+    await alertStore.showAlert('LOGIN FAILED', '로그인에 실패했습니다. \n이메일과 비밀번호를 확인해주세요.')
   } finally {
     isLoading.value = false
   }
@@ -54,11 +54,6 @@ const handleLogin = async () => {
         <label class="text-green-400 font-bold text-xs tracking-wider">PASSWORD</label>
         <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
       </div>
-    </div>
-
-    <div v-if="errorMessage"
-      class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs text-center font-bold animate-pulse">
-      ! {{ errorMessage }}
     </div>
 
     <button @click="handleLogin" :disabled="isLoading"
