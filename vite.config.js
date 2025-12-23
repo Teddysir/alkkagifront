@@ -20,6 +20,11 @@ export default defineConfig({
         target: 'https://d3ud9ocg2cusae.cloudfront.net',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/code-cdn/, '')
+      },
+      '/api': {
+        target: 'https://alkkagiback.shop',
+        changeOrigin: true,
+        secure: false,
       }
     }
   }

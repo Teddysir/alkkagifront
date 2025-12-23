@@ -85,7 +85,7 @@ export const useNotificationStore = defineStore('notification', () => {
             return
         }
 
-        const url = `${import.meta.env.VITE_API_BASE_URL || 'https://alkkagiback.shop'}/api/v1/notifications/subscribe`
+        const url = `/api/v1/notifications/subscribe`
         console.log("Connecting SSE (Fetch) to:", url)
 
         abortController = new AbortController()
