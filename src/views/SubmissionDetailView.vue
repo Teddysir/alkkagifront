@@ -193,13 +193,14 @@ onBeforeUnmount(() => {
 
         <!-- Main Content -->
         <div v-else-if="submission"
-            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 h-full overflow-hidden">
+            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 h-full overflow-hidden animate-slide-up">
 
             <!-- LEFT COLUMN: Problem + Code + Reviews -->
             <div class="flex-1 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar min-w-0 pr-2">
 
                 <!-- Problem Info Card -->
-                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shrink-0 shadow-lg">
+                <div
+                    class="bg-[#1e1e1e]/90 border-2 border-green-500/30 p-4 shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-all hover:border-green-500/50">
                     <div class="flex justify-between items-start mb-2">
                         <h2 class="text-xl text-white font-bold truncate pr-4">
                             <PixelText>{{ problem.title || 'Loading...' }}</PixelText>
@@ -219,10 +220,10 @@ onBeforeUnmount(() => {
 
                 <!-- Code Viewer -->
                 <div
-                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col min-h-[500px] shadow-lg relative shrink-0">
+                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col min-h-[500px] shadow-lg relative shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                     <div class="bg-[#2d2d2d] p-2 flex justify-between items-center border-b border-gray-700 shrink-0">
                         <span class="text-xs text-gray-400 font-bold px-2">SOURCE CODE ({{ submission.language
-                        }})</span>
+                            }})</span>
                         <!-- Copy Button could go here -->
                     </div>
                     <div ref="editorContainer" class="flex-1 w-full relative" :style="{ height: editorHeight + 'px' }">
@@ -239,22 +240,11 @@ onBeforeUnmount(() => {
             <div class="w-full md:w-[400px] flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar shrink-0 pb-4">
 
                 <!-- User Info -->
-                <!-- <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 flex items-center gap-3 shadow-lg">
-                    <div class="w-10 h-10 rounded bg-gray-800 border border-gray-600 overflow-hidden">
-                        <img v-if="submission.userInfoResponseDto?.profileImage"
-                            :src="submission.userInfoResponseDto.profileImage" class="w-full h-full object-cover">
-                        <span v-else class="flex items-center justify-center h-full text-xs text-gray-400">{{
-                            submission.userInfoResponseDto?.nickname?.charAt(0) }}</span>
-                    </div>
-                    <div>
-                        <div class="text-sm text-white font-bold">{{ submission.userInfoResponseDto?.nickname }}</div>
-                        <div class="text-xs text-gray-500">Submitted at {{ new
-                            Date(submission.createdAt).toLocaleString() }}</div>
-                    </div>
-                </div> -->
+                <!-- ... -->
 
                 <!-- Algo Tags -->
-                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg">
+                <div
+                    class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                     <label class="text-xs text-gray-400 font-bold block mb-2">ALGORITHM TAGS</label>
                     <div class="flex flex-wrap gap-2">
                         <span v-for="algo in submission.algorithmList" :key="algo.id"
@@ -266,8 +256,9 @@ onBeforeUnmount(() => {
                 </div>
 
                 <!-- Exec Stats -->
-                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg">
-                    <h3 class="text-sm text-purple-400 font-bold border-b border-purple-500/30 pb-2 mb-3">EXECUTION
+                <div
+                    class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shadow-lg transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                    <h3 class="text-sm text-green-400 font-bold border-b border-gray-700 pb-2 mb-3">EXECUTION
                         STATS</h3>
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -276,8 +267,8 @@ onBeforeUnmount(() => {
                         </div>
                         <div>
                             <span class="text-[10px] text-gray-500 block mb-1">MEMORY</span>
-                            <span class="text-sm text-white font-mono">{{ Math.round(submission.memory / 1024) }}
-                                MB</span>
+                            <span class="text-sm text-white font-mono">{{ Math.round(submission.memory) }}
+                                KB</span>
                         </div>
                     </div>
                     <div>
@@ -291,7 +282,7 @@ onBeforeUnmount(() => {
 
                 <!-- Strategy Display -->
                 <div
-                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col shadow-lg overflow-hidden flex-1 min-h-[300px]">
+                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col shadow-lg overflow-hidden flex-1 min-h-[200px] transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                     <div class="bg-[#2d2d2d] p-2 border-b border-gray-700 shrink-0">
                         <span class="text-xs text-gray-400 font-bold">STRATEGY</span>
                     </div>
@@ -305,6 +296,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
 
 .custom-scrollbar::-webkit-scrollbar {

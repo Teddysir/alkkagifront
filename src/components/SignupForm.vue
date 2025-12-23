@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import PixelInput from '@/components/PixelInput.vue'
 import PixelButton from '@/components/PixelButton.vue'
 import { signup, checkEmail, checkNickname } from '@/api/auth'
+import { useAlertStore } from '@/stores/alert'
 
 const emit = defineEmits(['success'])
 
@@ -29,6 +30,8 @@ watch(nickname, () => {
   nicknameWarning.value = ''
 })
 
+const alertStore = useAlertStore()
+
 const handleCheckEmail = async () => {
   if (!email.value) return
   /* User requested warning if button not clicked, but if clicked and failed, we show alert. 
@@ -38,14 +41,14 @@ const handleCheckEmail = async () => {
     if (res.data && res.data.isAvailable) {
       isEmailChecked.value = true
       emailWarning.value = '' // Clear warning
-      alert('사용 가능한 이메일입니다.')
+      await alertStore.showAlert('CHECK SUCCESS', '사용 가능한 이메일입니다.')
     } else {
-      alert('이미 사용중인 이메일입니다.')
+      await alertStore.showAlert('CHECK FAIL', '이미 사용중인 이메일입니다.')
       isEmailChecked.value = false
     }
   } catch (e) {
     console.error(e)
-    alert('확인 중 오류가 발생했습니다.')
+    await alertStore.showAlert('ERROR', '확인 중 오류가 발생했습니다.')
     isEmailChecked.value = false
   }
 }
@@ -57,14 +60,14 @@ const handleCheckNickname = async () => {
     if (res.data && res.data.isAvailable) {
       isNicknameChecked.value = true
       nicknameWarning.value = '' // Clear warning
-      alert('사용 가능한 닉네임입니다.')
+      await alertStore.showAlert('CHECK SUCCESS', '사용 가능한 닉네임입니다.')
     } else {
-      alert('이미 사용중인 닉네임입니다.')
+      await alertStore.showAlert('CHECK FAIL', '이미 사용중인 닉네임입니다.')
       isNicknameChecked.value = false
     }
   } catch (e) {
     console.error(e)
-    alert('확인 중 오류가 발생했습니다.')
+    await alertStore.showAlert('ERROR', '확인 중 오류가 발생했습니다.')
     isNicknameChecked.value = false
   }
 }
@@ -88,11 +91,11 @@ const handleSignup = async () => {
 
   // Validate Duplicate Checks
   if (!isEmailChecked.value) {
-    emailWarning.value = '중복체크를 먼저 확인해주세요 용사님!'
+    emailWarning.value = '이메일 중복체크를 먼저 확인해주세요!'
     hasError = true
   }
   if (!isNicknameChecked.value) {
-    nicknameWarning.value = '중복체크를 먼저 확인해주세요 용사님!'
+    nicknameWarning.value = '닉네임 중복체크를 먼저 확인해주세요!'
     hasError = true
   }
 
@@ -106,7 +109,7 @@ const handleSignup = async () => {
       nickname: nickname.value,
       password: password.value
     })
-    alert('용사로 전직 성공! 로그인해주세요.')
+    await alertStore.showAlert('SIGNUP SUCCESS', '회원가입 성공! 로그인해주세요.')
     emit('success')
   } catch (error) {
     console.error(error)

@@ -51,7 +51,7 @@ const submitNewReview = async () => {
         await fetchReviews({ background: true, scrollToId: res.data?.id || res.data?.data?.id })
     } catch (e) {
         console.error(e)
-        triggerAlert('Failed to submit review', true)
+        triggerAlert('캠페인에 참여한 사용자만 리뷰를 남길 수 있습니다.', true)
     } finally {
         isSubmitting.value = false
     }

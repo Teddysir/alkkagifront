@@ -93,9 +93,14 @@ const handleSubmit = async () => {
                 <div
                     class="absolute top-0 left-0 right-0 h-8 bg-green-500/10 border-b border-green-500/30 flex items-center px-4 justify-between">
                     <PixelText variant="small" class="text-green-500">>> SYSTEM_ADMIN_ACCESS</PixelText>
-                    <div class="flex gap-1">
-                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <div class="w-2 h-2 bg-green-500/30 rounded-full"></div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <div class="w-2 h-2 bg-green-500/30 rounded-full"></div>
+                        </div>
+                        <button @click="router.back()" class="text-gray-500 hover:text-white transition-colors">
+                            <PixelText>X</PixelText>
+                        </button>
                     </div>
                 </div>
 

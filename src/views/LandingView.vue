@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAlertStore } from '@/stores/alert' // Import
@@ -111,7 +111,18 @@ const snowflakes = Array.from({ length: SNOW_COUNT }).map(() => ({
 onMounted(() => {
   initCodeLines()
   typeCode()
+  window.addEventListener('keydown', handleKeydown)
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+
+const handleKeydown = (e) => {
+  if (e.key === 'Enter' && showEditor.value) {
+    skipAnimation()
+  }
+}
 
 const skipAnimation = () => {
   showEditor.value = false
@@ -191,12 +202,16 @@ const goToCampaign = () => {
               </div>
             </div>
           </div>
-          <button @click="skipAnimation"
-            class="absolute bottom-[-50px] right-0 text-gray-500 hover:text-white transition-colors tracking-widest text-sm font-bold animate-pulse">
-            SKIP >
-          </button>
         </div>
       </div>
+    </transition>
+
+    <!-- Fixed Skip Button -->
+    <transition name="fade">
+      <button v-if="showEditor" @click="skipAnimation"
+        class="fixed bottom-8 right-8 z-50 text-gray-500 hover:text-white transition-colors tracking-widest text-sm font-bold animate-pulse bg-black/20 px-4 py-2 rounded border border-gray-700 hover:border-white hover:bg-black/50 backdrop-blur-sm">
+        SKIP [ENTER] >
+      </button>
     </transition>
 
     <div class="absolute inset-0 pointer-events-none z-0">

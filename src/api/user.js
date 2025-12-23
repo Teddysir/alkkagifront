@@ -24,6 +24,12 @@ export const updateProfileImage = async (file) => {
     return response.data
 }
 
+// { message: "...", data: { userId: 1, score: 18 } }
+export const getUserTier = async () => {
+    const response = await axios.get('/users/tier')
+    return response.data
+}
+
 export const deleteProfileImage = async () => {
     const response = await axios.put('/users/profile-images') // No payload per instructions
     return response.data

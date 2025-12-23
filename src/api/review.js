@@ -31,3 +31,20 @@ export const deleteReview = (reviewId) => {
 export const toggleLikeReview = (reviewId) => {
     return instance.post(`/reviews/${reviewId}/likes`)
 }
+
+// Lists for MyPage
+
+// 1. Pending Reviews (Required)
+export const getPendingReviews = (params) => {
+    return instance.get('/reviews/lists/require', { params })
+}
+
+// 2. Received Reviews
+export const getReceivedReviews = (params) => {
+    return instance.get('/reviews/lists/receive', { params })
+}
+
+// 3. Given Reviews (Done)
+export const getGivenReviews = (params) => {
+    return instance.get('/reviews/lists/done', { params })
+}

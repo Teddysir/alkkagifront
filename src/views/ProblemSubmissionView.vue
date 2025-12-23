@@ -97,6 +97,12 @@ let strategyInstance = null // New instance for Markdown
 const strategyMode = ref('WRITE') // WRITE | PREVIEW
 const parsedStrategyHtml = ref('')
 
+// Auto-grow Editor Refs
+const editorHeight = ref(500) // Default min height
+
+
+
+
 
 // Fetch Problem Detail
 const fetchDetail = async () => {
@@ -252,7 +258,25 @@ const createEditors = () => {
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            padding: { top: 16, bottom: 16 }
+            padding: { top: 16, bottom: 16 },
+            scrollbar: {
+                vertical: 'hidden',
+                handleMouseWheel: false
+            }
+        })
+
+        const updateHeight = () => {
+            const contentHeight = editorInstance.getContentHeight()
+            editorHeight.value = Math.max(500, contentHeight)
+            editorContainer.value.style.height = `${editorHeight.value}px`
+        }
+
+        editorInstance.onDidContentSizeChange(updateHeight)
+        // Initial height update
+        updateHeight()
+
+        editorInstance.onDidChangeModelContent(() => {
+            code.value = editorInstance.getValue()
         })
 
         editorInstance.onDidChangeModelContent(() => {
@@ -341,8 +365,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div
-        class="h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative overflow-hidden selection:bg-green-500/30">
+    <div class="min-h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative selection:bg-green-500/30">
 
         <!-- Alerts -->
         <PixelDefaultAlert v-if="showAlert && !isAlertError" :message="alertMessage" @confirm="closeAlert"
@@ -359,14 +382,15 @@ onBeforeUnmount(() => {
 
         <CommonHeader class="shrink-0 relative z-20" />
 
-        <!-- Main Layout: Full Height, No Scroll on Body -->
+        <!-- Main Layout: Scrollable Body -->
         <div
-            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 h-full overflow-hidden">
+            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 animate-slide-up">
 
             <!-- LEFT: Problem Info & Code Editor -->
-            <div class="flex-1 flex flex-col gap-4 h-full overflow-hidden min-w-0">
+            <div class="flex-1 flex flex-col gap-4 min-w-0">
                 <!-- Problem Info Card -->
-                <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 shrink-0 shadow-lg">
+                <div
+                    class="bg-[#1e1e1e]/90 border-2 border-green-500/30 p-4 shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-all hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]">
                     <div class="flex justify-between items-start mb-2">
                         <h2 class="text-xl text-white font-bold truncate pr-4">
                             <PixelText>{{ problem.title || 'Loading...' }}</PixelText>
@@ -387,7 +411,7 @@ onBeforeUnmount(() => {
 
                 <!-- Code Editor Area -->
                 <div
-                    class="flex-1 bg-[#1e1e1e]/90 border border-gray-700 flex flex-col overflow-hidden shadow-lg relative">
+                    class="flex-1 bg-[#1e1e1e]/90 border-2 border-gray-700/50 flex flex-col shadow-[0_0_15px_rgba(34,197,94,0.05)] relative transition-all hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.1)]">
                     <div class="bg-[#2d2d2d] p-2 flex justify-between items-center border-b border-gray-700 shrink-0">
                         <span class="text-xs text-gray-400 font-bold px-2">SOURCE CODE</span>
                         <select v-model="language"
@@ -396,16 +420,17 @@ onBeforeUnmount(() => {
                         </select>
                     </div>
                     <!-- Monaco Container -->
-                    <div ref="editorContainer" class="flex-1 w-full relative"></div>
+                    <div ref="editorContainer" class="w-full relative" :style="{ height: editorHeight + 'px' }"></div>
                 </div>
             </div>
 
             <!-- RIGHT: Submission Stats & Algo -->
-            <div class="w-full md:w-[400px] flex flex-col gap-4 h-full overflow-hidden">
-                <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4 pb-4">
+            <div class="w-full md:w-[400px] flex flex-col gap-4 shrink-0">
+                <div class="flex flex-col gap-4 pb-4">
 
                     <!-- Algorithm Selector -->
-                    <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 flex flex-col gap-3 shadow-lg shrink-0">
+                    <div
+                        class="bg-[#1e1e1e]/90 border-2 border-gray-700/50 p-4 flex flex-col gap-3 shadow-[0_0_15px_rgba(34,197,94,0.05)] shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.1)]">
                         <label class="text-xs text-gray-400 font-bold">ALGORITHM TAGS</label>
                         <div class="relative">
                             <div class="flex gap-2">
@@ -437,8 +462,9 @@ onBeforeUnmount(() => {
                     </div>
 
                     <!-- Run Stats Form -->
-                    <div class="bg-[#1e1e1e]/90 border border-gray-700 p-4 flex flex-col gap-4 shadow-lg shrink-0">
-                        <h3 class="text-sm text-purple-400 font-bold border-b border-purple-500/30 pb-2">EXECUTION STATS
+                    <div
+                        class="bg-[#1e1e1e]/90 border-2 border-gray-700/50 p-4 flex flex-col gap-4 shadow-[0_0_15px_rgba(34,197,94,0.05)] shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.1)]">
+                        <h3 class="text-sm text-green-400 font-bold border-b border-gray-700 pb-2">EXECUTION STATS
                         </h3>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -468,7 +494,7 @@ onBeforeUnmount(() => {
 
                     <!-- Strategy Input (Markdown) -->
                     <div
-                        class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col flex-1 min-h-[200px] shadow-lg overflow-hidden">
+                        class="bg-[#1e1e1e]/90 border-2 border-gray-700/50 flex flex-col flex-1 min-h-[400px] shadow-[0_0_15px_rgba(34,197,94,0.05)] transition-all hover:border-green-500/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.1)]">
                         <div class="bg-[#2d2d2d] p-1 flex gap-1 border-b border-gray-700 shrink-0">
                             <span class="text-xs text-gray-400 font-bold px-3 py-2 mr-auto self-center">STRATEGY
                                 (MD)</span>
@@ -507,6 +533,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
 
 .pixel-font {

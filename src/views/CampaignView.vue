@@ -85,8 +85,9 @@ const handleCardClick = (campaign) => {
                         <button @click="prev('future')" :disabled="!canGoPrev('future')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoPrev('future') }"><span>&lt;</span></button>
                         <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
-                            <CampaignCard v-for="c in getVisibleItems('future')" :key="c.id" :campaign="c"
-                                :status="'future'" @click="handleCardClick(c)" />
+                            <CampaignCard v-for="(c, index) in getVisibleItems('future')" :key="c.id" :campaign="c"
+                                :status="'future'" @click="handleCardClick(c)" class="animate-slide-fade-in"
+                                :style="{ animationDelay: `${index * 100}ms` }" />
                             <div v-if="getVisibleItems('future').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('future').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
@@ -106,8 +107,9 @@ const handleCardClick = (campaign) => {
                         <button @click="prev('open')" :disabled="!canGoPrev('open')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoPrev('open') }"><span>&lt;</span></button>
                         <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
-                            <CampaignCard v-for="c in getVisibleItems('open')" :key="c.id" :campaign="c"
-                                :status="'open'" @click="handleCardClick(c)" />
+                            <CampaignCard v-for="(c, index) in getVisibleItems('open')" :key="c.id" :campaign="c"
+                                :status="'open'" @click="handleCardClick(c)" class="animate-slide-fade-in"
+                                :style="{ animationDelay: `${index * 100}ms` }" />
                             <div v-if="getVisibleItems('open').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('open').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
@@ -127,8 +129,9 @@ const handleCardClick = (campaign) => {
                         <button @click="prev('closed')" :disabled="!canGoPrev('closed')" class="nav-arrow group"
                             :class="{ 'opacity-20': !canGoPrev('closed') }"><span>&lt;</span></button>
                         <div class="flex-1 grid grid-cols-3 gap-4 md:gap-6 min-h-[350px]">
-                            <CampaignCard v-for="c in getVisibleItems('closed')" :key="c.id" :campaign="c"
-                                :status="'closed'" @click="handleCardClick(c)" />
+                            <CampaignCard v-for="(c, index) in getVisibleItems('closed')" :key="c.id" :campaign="c"
+                                :status="'closed'" @click="handleCardClick(c)" class="animate-slide-fade-in"
+                                :style="{ animationDelay: `${index * 100}ms` }" />
                             <div v-if="getVisibleItems('closed').length < ITEMS_PER_PAGE"
                                 v-for="n in (ITEMS_PER_PAGE - getVisibleItems('closed').length)"
                                 class="border-2 border-dashed border-gray-800 rounded opacity-30 flex items-center justify-center min-h-[350px]">
@@ -170,5 +173,23 @@ const handleCardClick = (campaign) => {
 .nav-arrow:hover:not(:disabled) {
     border-color: #52525b;
     color: white;
+}
+
+@keyframes slideFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-fade-in {
+    opacity: 0;
+    /* HIDDEN INITIALLY */
+    animation: slideFadeIn 0.5s ease-out forwards;
 }
 </style>

@@ -405,7 +405,7 @@ watch(problems, async () => {
                             </button>
 
                             <!-- User Join/Withdraw -->
-                            <template v-else-if="campaign">
+                            <template v-if="campaign">
                                 <!-- Withdraw Button (If Joined) -->
                                 <button v-if="campaign.isParticipated" @click="handleWithdraw"
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
