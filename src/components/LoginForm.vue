@@ -17,7 +17,7 @@ const handleLogin = async () => {
     errorMessage.value = '이메일과 비밀번호를 입력해주세요.'
     return
   }
-  
+
   isLoading.value = true
   errorMessage.value = ''
 
@@ -36,28 +36,34 @@ const handleLogin = async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 w-full max-w-md">
+  <div
+    class="flex flex-col gap-6 w-full max-w-md p-6 bg-[#0a0a0a]/80 border border-green-500/30 rounded-2xl shadow-xl backdrop-blur-sm">
+    <!-- Header -->
+    <div class="text-center mb-2">
+      <h2 class="text-2xl font-bold text-white tracking-widest">WELCOME BACK</h2>
+      <p class="text-xs text-gray-500 mt-1">LOG IN TO CONTINUE</p>
+    </div>
+
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2">
-        <label class="text-gray-400 font-mono text-sm tracking-wider">EMAIL</label>
-        <PixelInput v-model="email" placeholder="example@email.com" />
+        <label class="text-green-400 font-bold text-xs tracking-wider">EMAIL</label>
+        <PixelInput v-model="email" placeholder="example@email.com" class="!rounded-lg" />
       </div>
 
       <div class="flex flex-col gap-2">
-        <label class="text-gray-400 font-mono text-sm tracking-wider">PASSWORD</label>
-        <PixelInput v-model="password" type="password" placeholder="********" />
+        <label class="text-green-400 font-bold text-xs tracking-wider">PASSWORD</label>
+        <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
       </div>
     </div>
 
-    <div v-if="errorMessage" class="text-red-400 font-mono text-sm text-center animate-pulse">
+    <div v-if="errorMessage"
+      class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs text-center font-bold animate-pulse">
       ! {{ errorMessage }}
     </div>
 
-    <PixelButton 
-      text="GAME START" 
-      :disabled="isLoading" 
-      @click="handleLogin"
-      class="mt-4"
-    />
+    <button @click="handleLogin" :disabled="isLoading"
+      class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4">
+      GAME START
+    </button>
   </div>
 </template>
