@@ -1,116 +1,176 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { useAuthStore } from './auth' // authStore 가져오기
 import { getNotificationList, getUnreadCount, markAsRead, deleteNotifications } from '@/api/notification'
 
 export const useNotificationStore = defineStore('notification', () => {
-    const authStore = useAuthStore()
     const notifications = ref([])
     const unreadCount = ref(0)
     const isConnected = ref(false)
-    let abortController = null
+    let eventSource = null
 
     // --- API Interactions ---
     const fetchNotifications = async () => {
         try {
             const res = await getNotificationList()
+            // Format: { message: "...", data: [...] }
             notifications.value = res.data || []
-        } catch (e) { console.error("Failed to fetch notifications", e) }
+        } catch (e) {
+            console.error("Failed to fetch notifications", e)
+        }
     }
 
     const fetchUnreadCount = async () => {
         try {
             const res = await getUnreadCount()
+            // Format: { message: "...", data: { notificationCount: 4 } }
             unreadCount.value = res.data?.notificationCount || 0
-        } catch (e) { console.error("Failed to fetch count", e) }
+        } catch (e) {
+            console.error("Failed to fetch count", e)
+        }
     }
 
-    // ... markRead, removeNotification 등 기존 액션 유지 ...
+    const markRead = async (id) => {
+        try {
+            // Optimistic update
+            const target = notifications.value.find(n => n.id === id)
+            if (target && !target.isRead) {
+                target.isRead = true
+                unreadCount.value = Math.max(0, unreadCount.value - 1)
+            }
 
-    // --- SSE Logic ---
+            await markAsRead(id)
+        } catch (e) {
+            console.error("Failed to mark read", e)
+            fetchNotifications() // Revert on fail
+            fetchUnreadCount()
+        }
+    }
+
+    const removeNotification = async (id) => {
+        try {
+            // Optimistic update
+            const target = notifications.value.find(n => n.id === id)
+            if (target && !target.isRead) {
+                unreadCount.value = Math.max(0, unreadCount.value - 1)
+            }
+            notifications.value = notifications.value.filter(n => n.id !== id)
+
+            await deleteNotifications([id])
+        } catch (e) {
+            console.error("Failed to delete", e)
+            fetchNotifications()
+        }
+    }
+
+    const removeAllNotifications = async (ids) => {
+        try {
+            notifications.value = notifications.value.filter(n => !ids.includes(n.id))
+            unreadCount.value = 0 // Assuming all deleted
+            await deleteNotifications(ids)
+        } catch (e) {
+            console.error("Failed to delete all", e)
+            fetchNotifications()
+        }
+    }
+
+    // --- SSE Logic (Fetch Implementation for Auth Headers) ---
+    let abortController = null
+
     const connectSSE = async () => {
         if (isConnected.value || abortController) return
 
-        const currentToken = authStore.token
-        if (!currentToken) return
+        const token = localStorage.getItem('Authorization')
+        if (!token) {
+            console.warn("SSE: No token found, skipping connection.")
+            return
+        }
 
         const url = `${import.meta.env.VITE_API_BASE_URL || 'https://alkkagiback.shop'}/api/v1/notifications/subscribe`
+        console.log("Connecting SSE (Fetch) to:", url)
+
         abortController = new AbortController()
 
         try {
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${currentToken}`,
+                    'Authorization': `Bearer ${token}`,
                     'Accept': 'text/event-stream',
                     'Cache-Control': 'no-cache',
                 },
                 signal: abortController.signal
             })
 
-            // 1. 응답 헤더에서 새 토큰 확인 (RT로 재발급된 경우)
-            const newTokenHeader = response.headers.get('Authorization')
-            if (newTokenHeader) {
-                const cleanToken = newTokenHeader.startsWith('Bearer ') ? newTokenHeader.split(' ')[1] : newTokenHeader
-                authStore.token = cleanToken // authStore 상태 갱신
-                localStorage.setItem('Authorization', cleanToken) // 로컬 스토리지 동기화
-                console.log("SSE: Access Token updated via Response Header")
+            if (!response.ok) {
+                throw new Error(`SSE HTTP Error: ${response.status}`)
             }
 
-            if (response.status === 401) {
-                console.error("SSE: Unauthorized. Connection failed.")
-                isConnected.value = false
-                return
-            }
-
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`)
-
+            console.log("SSE Connected! Reading stream...")
             isConnected.value = true
-            console.log("SSE Stream Connected Successfully")
 
+            // Start reading the stream
             const reader = response.body.getReader()
             const decoder = new TextDecoder()
             let buffer = ''
 
+            // Infinite loop to read stream
             while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
 
-                buffer += decoder.decode(value, { stream: true })
+                const chunk = decoder.decode(value, { stream: true })
+                buffer += chunk
+
+                // Process complete blocks separated by double newline
                 const parts = buffer.split('\n\n')
-                buffer = parts.pop()
+                buffer = parts.pop() // Keep incomplete part for next chunk
 
                 for (const part of parts) {
-                    if (part.trim()) processMessage(part)
+                    if (!part.trim()) continue
+
+                    const lines = part.split('\n')
+                    let eventType = 'message'
+                    let data = ''
+
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            eventType = line.substring(6).trim()
+                        } else if (line.startsWith('data:')) {
+                            data = line.substring(5).trim()
+                        }
+                    }
+
+                    // Handle Events
+                    if (eventType === 'INIT') {
+                        console.log("SSE: Init Event Received")
+                        fetchUnreadCount() // Sync initial count
+                    } else if (eventType === 'NOTIFICATION') {
+                        console.log("SSE: Notification Received", data)
+                        try {
+                            const parsedData = (typeof data === 'string' && (data.startsWith('{') || data.startsWith('['))) ? JSON.parse(data) : data
+                            console.log("SSE Payload:", parsedData)
+                            fetchNotifications()
+                            fetchUnreadCount()
+                        } catch (e) {
+                            console.error("SSE Parse Error:", e, data)
+                        }
+                    }
                 }
             }
+
         } catch (e) {
             if (e.name === 'AbortError') {
-                console.log("SSE: Connection Aborted")
+                console.log("SSE Connection Aborted (User Disconnect)")
             } else {
-                console.error("SSE: Error occurred", e)
+                console.error("SSE Connection Error:", e)
                 isConnected.value = false
                 abortController = null
-                setTimeout(() => connectSSE(), 5000) // 재연결 시도
+                // Retry logic
+                setTimeout(() => connectSSE(), 5000)
             }
         } finally {
             isConnected.value = false
             abortController = null
-        }
-    }
-
-    const processMessage = (part) => {
-        const lines = part.split('\n')
-        let eventType = 'message', data = ''
-        lines.forEach(line => {
-            if (line.startsWith('event:')) eventType = line.substring(6).trim()
-            else if (line.startsWith('data:')) data = line.substring(5).trim()
-        })
-
-        if (eventType === 'INIT') fetchUnreadCount()
-        else if (eventType === 'NOTIFICATION') {
-            fetchNotifications()
-            fetchUnreadCount()
         }
     }
 
@@ -120,7 +180,19 @@ export const useNotificationStore = defineStore('notification', () => {
             abortController = null
         }
         isConnected.value = false
+        console.log("SSE Disconnected manually")
     }
 
-    return { notifications, unreadCount, isConnected, fetchNotifications, fetchUnreadCount, connectSSE, disconnectSSE }
+    return {
+        notifications,
+        unreadCount,
+        isConnected,
+        fetchNotifications,
+        fetchUnreadCount,
+        markRead,
+        removeNotification,
+        removeAllNotifications,
+        connectSSE,
+        disconnectSSE
+    }
 })
