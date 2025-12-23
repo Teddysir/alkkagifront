@@ -73,62 +73,114 @@ export const useNotificationStore = defineStore('notification', () => {
         }
     }
 
-    // --- SSE Logic ---
-    const connectSSE = () => {
-        if (eventSource) return // Already connected
+    // --- SSE Logic (Fetch Implementation for Auth Headers) ---
+    let abortController = null
 
-        // Using relative path via Vite proxy or absolute if configured? 
-        // Assuming /api prefix is proxied to backend.
-        // The user snippet uses "/api/v1/notifications/subscribe"
-        // Adjust if axios baseURL is different, but EventSource doesn't use axios.
-        // We typically need the full URL or relative to origin. 
-        // If "api/v1" is proxied:
+    const connectSSE = async () => {
+        if (isConnected.value || abortController) return
+
+        const token = localStorage.getItem('Authorization')
+        if (!token) {
+            console.warn("SSE: No token found, skipping connection.")
+            return
+        }
+
         const url = `${import.meta.env.VITE_API_BASE_URL || 'https://alkkagiback.shop'}/api/v1/notifications/subscribe`
+        console.log("Connecting SSE (Fetch) to:", url)
 
-        console.log("Connecting SSE to:", url)
+        abortController = new AbortController()
 
-        eventSource = new EventSource(url, { withCredentials: true })
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                },
+                signal: abortController.signal
+            })
 
-        eventSource.addEventListener('INIT', (event) => {
-            console.log("SSE Connected! (INIT)")
-            isConnected.value = true
-            fetchUnreadCount() // Sync count on connect
-        })
-
-        eventSource.addEventListener('NOTIFICATION', (event) => {
-            console.log("SSE NOTIFICATION RECEIVED raw:", event.data)
-            try {
-                // If event.data is already an object (browser impl detail?), use it. Otherwise parse.
-                const rawData = event.data
-                const data = (typeof rawData === 'string') ? JSON.parse(rawData) : rawData
-
-                console.log("SSE Parsed Payload:", data)
-
-                // Refresh data
-                fetchNotifications()
-                fetchUnreadCount()
-            } catch (e) {
-                console.error("SSE Parse Error", e, event.data)
+            if (!response.ok) {
+                throw new Error(`SSE HTTP Error: ${response.status}`)
             }
-        })
 
-        eventSource.onerror = (e) => {
-            console.log("SSE Error, retrying...", e)
-            eventSource.close()
-            eventSource = null
+            console.log("SSE Connected! Reading stream...")
+            isConnected.value = true
+
+            // Start reading the stream
+            const reader = response.body.getReader()
+            const decoder = new TextDecoder()
+            let buffer = ''
+
+            // Infinite loop to read stream
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+
+                const chunk = decoder.decode(value, { stream: true })
+                buffer += chunk
+
+                // Process complete blocks separated by double newline
+                const parts = buffer.split('\n\n')
+                buffer = parts.pop() // Keep incomplete part for next chunk
+
+                for (const part of parts) {
+                    if (!part.trim()) continue
+
+                    const lines = part.split('\n')
+                    let eventType = 'message'
+                    let data = ''
+
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            eventType = line.substring(6).trim()
+                        } else if (line.startsWith('data:')) {
+                            data = line.substring(5).trim()
+                        }
+                    }
+
+                    // Handle Events
+                    if (eventType === 'INIT') {
+                        console.log("SSE: Init Event Received")
+                        fetchUnreadCount() // Sync initial count
+                    } else if (eventType === 'NOTIFICATION') {
+                        console.log("SSE: Notification Received", data)
+                        try {
+                            const parsedData = (typeof data === 'string' && (data.startsWith('{') || data.startsWith('['))) ? JSON.parse(data) : data
+                            console.log("SSE Payload:", parsedData)
+                            fetchNotifications()
+                            fetchUnreadCount()
+                        } catch (e) {
+                            console.error("SSE Parse Error:", e, data)
+                        }
+                    }
+                }
+            }
+
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                console.log("SSE Connection Aborted (User Disconnect)")
+            } else {
+                console.error("SSE Connection Error:", e)
+                isConnected.value = false
+                abortController = null
+                // Retry logic
+                setTimeout(() => connectSSE(), 5000)
+            }
+        } finally {
             isConnected.value = false
-            // Retry logic usually automatic in browser but we can force reconnect after delay if needed
-            setTimeout(() => connectSSE(), 3000)
+            abortController = null
         }
     }
 
     const disconnectSSE = () => {
-        if (eventSource) {
-            eventSource.close()
-            eventSource = null
-            isConnected.value = false
-            console.log("SSE Disconnected")
+        if (abortController) {
+            abortController.abort()
+            abortController = null
         }
+        isConnected.value = false
+        console.log("SSE Disconnected manually")
     }
 
     return {
