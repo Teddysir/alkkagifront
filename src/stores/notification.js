@@ -83,7 +83,7 @@ export const useNotificationStore = defineStore('notification', () => {
         // Adjust if axios baseURL is different, but EventSource doesn't use axios.
         // We typically need the full URL or relative to origin. 
         // If "api/v1" is proxied:
-        const url = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/v1/notifications/subscribe`
+        const url = `${import.meta.env.VITE_API_BASE_URL || 'https://alkkagiback.shop'}/api/v1/notifications/subscribe`
 
         console.log("Connecting SSE to:", url)
 
