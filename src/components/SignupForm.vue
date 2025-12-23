@@ -119,7 +119,7 @@ const handleSignup = async () => {
       email: email.value,
       nickname: nickname.value,
       password: password.value,
-      verificationCode: verificationCode.value // Send code with signup
+      authCode: verificationCode.value // Send code with signup
     })
     await alertStore.showAlert('SIGNUP SUCCESS', '회원가입 성공! 로그인해주세요.')
     emit('success')
