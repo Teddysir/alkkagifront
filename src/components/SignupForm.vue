@@ -122,7 +122,71 @@ const handleCheckNickname = async () => {
     isNicknameChecked.value = false
   }
 }
-// ...
+const handleSignup = async () => {
+  // 1. Validate Inputs
+  if (!email.value || !nickname.value || !password.value || !confirmPassword.value) {
+    await alertStore.showAlert('MISSING INPUT', '모든 필드를 입력해주세요.')
+    return
+  }
+
+  // 2. Validate Password Match
+  if (password.value !== confirmPassword.value) {
+    await alertStore.showAlert('INVALID PASSWORD', '비밀번호가 일치하지 않습니다.')
+    return
+  }
+
+  // 3. Validate Nickname Check
+  // if (!isNicknameChecked.value) {
+  //   await alertStore.showAlert('CHECK NICKNAME', '닉네임 중복 확인을 해주세요.')
+  //   return
+  // }
+  // Commented out to allow testing without strict check if backend handles it, 
+  // but logically better to enforce. Un-commenting for robustness:
+  if (!isNicknameChecked.value) {
+    await alertStore.showAlert('CHECK NICKNAME', '닉네임 중복 확인을 해주세요.')
+    return
+  }
+
+
+  // 4. Validate Email Verification (Optional depending on flow, but strict here)
+  if (!isVerificationSent) {
+    await alertStore.showAlert('VERIFY EMAIL', '이메일 인증을 진행해주세요.')
+    return
+  }
+  // If verifying code is required:
+  if (!verificationCode.value) {
+    await alertStore.showAlert('VERIFY EMAIL', '인증 코드를 입력해주세요.')
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const payload = {
+      email: email.value,
+      nickname: nickname.value,
+      password: password.value,
+      authCode: verificationCode.value // Sending auth code to backend
+    }
+
+    // Call API
+    await signup(payload)
+
+    // Success
+    await alertStore.showAlert('WELCOME', '회원가입이 완료되었습니다!')
+    emit('success')
+
+  } catch (e) {
+    console.error(e)
+    // Handle specific errors if backend sends them (e.g. 409 conflict, 400 bad request)
+    const msg = e.response?.data?.message || '회원가입 중 오류가 발생했습니다.'
+    errorMessage.value = msg
+    await alertStore.showAlert('ERROR', msg)
+  } finally {
+    isLoading.value = false
+  }
+}
 </script>
 
 <template>
