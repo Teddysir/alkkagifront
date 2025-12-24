@@ -60,12 +60,12 @@ const fetchData = async () => {
             }
         }
 
-        // Set User Status
         if (statusRes && statusRes.data) {
             userStatus.value = statusRes.data.campaignUserStatus
         } else {
             userStatus.value = null
         }
+        console.log('User Status:', userStatus.value)
 
     } catch (error) {
         console.error('Failed to load detail:', error)
@@ -74,6 +74,11 @@ const fetchData = async () => {
         isLoading.value = false
     }
 }
+
+// Rewatch auth changes (e.g. reload or late login)
+watch(() => authStore.isAuthenticated, (newVal) => {
+    if (newVal) fetchData()
+})
 
 // --- Admin Search & Add ---
 const handleSearch = async () => {
@@ -355,8 +360,8 @@ watch(problems, async () => {
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
                                     <PixelText>[ WITHDRAW ]</PixelText>
                                 </button>
-                                <!-- Join Button (If Status is NOT ACTIVE & Campaign In Recruitment Period) -->
-                                <button v-else-if="new Date() < new Date(campaign.startDate)" @click="handleJoin"
+                                <!-- Join Button (If Status is NOT ACTIVE & Campaign In Active Period) -->
+                                <button v-else-if="new Date() < new Date(campaign.endDate)" @click="handleJoin"
                                     class="px-4 py-2 border-2 border-green-500 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white transition-all text-xs font-bold animate-pulse">
                                     <PixelText>>> JOIN MISSION &lt;&lt;</PixelText>
                                 </button>
@@ -640,7 +645,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -702,7 +707,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
