@@ -53,9 +53,6 @@ export const useAuthStore = defineStore('auth', () => {
             localStorage.removeItem('Authorization')
             localStorage.removeItem('user')
 
-            // Delete RefreshToken from cookies (if accessible)
-            document.cookie = 'refreshToken=; Max-Age=0; path=/;'
-
             user.value = null
             token.value = null
         }

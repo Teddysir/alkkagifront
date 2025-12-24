@@ -80,7 +80,6 @@ export const useNotificationStore = defineStore('notification', () => {
         if (isConnected.value || abortController) return
 
         const token = localStorage.getItem('Authorization')
-        console.log("Token:", token);
         if (!token) {
             console.warn("SSE: No token found, skipping connection.")
             return

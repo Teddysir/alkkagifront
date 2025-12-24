@@ -52,25 +52,60 @@ const startTimer = () => {
   }, 1000)
 }
 
+const passwordError = computed(() => {
+  if (!password.value) return ''
+  if (password.value.length < 8) return '비밀번호는 8자 이상이어야 합니다.'
+  // Optional: Add more complex regex if needed, e.g. /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+  return ''
+})
+
+const passwordMatchError = computed(() => {
+  if (!confirmPassword.value) return ''
+  if (password.value !== confirmPassword.value) return '비밀번호가 일치하지 않습니다.'
+  return ''
+})
+
 const handleSendVerification = async () => {
-  if (!email.value) return
-  try {
-    isLoading.value = true
-    await sendVerificationEmail(email.value)
-    await alertStore.showAlert('SUCCESS', '인증번호가 전송되었습니다. 이메일을 확인해주세요!')
-    isVerificationSent.value = true
-    startTimer()
-  } catch (e) {
-    console.error(e)
-    // Handle error (e.g. duplicate email handled by backend 409?)
-    await alertStore.showAlert('ERROR', '인증번호 전송 실패. 이메일을 확인해주세요.')
-  } finally {
-    isLoading.value = false
+  if (!email.value) {
+    await alertStore.showAlert('MISSING INPUT', '이메일을 입력해주세요.')
+    return
   }
+
+  // Email Format Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    await alertStore.showAlert('INVALID EMAIL', '올바른 이메일 형식이 아닙니다.')
+    return
+  }
+
+  // Optimistic Update
+  isVerificationSent.value = true
+  startTimer()
+
+  // Show Succcess Alert Immediately
+  alertStore.showAlert('SUCCESS', '인증번호가 전송되었습니다. \n이메일을 확인해주세요!')
+
+  // Background Request
+  isLoading.value = true
+  sendVerificationEmail(email.value)
+    .catch(e => {
+      console.error(e)
+      // Failure: Revert state
+      isVerificationSent.value = false
+      if (timerInterval) clearInterval(timerInterval)
+      timer.value = 0
+      alertStore.showAlert('ERROR', '인증번호 전송 실패. \n이메일을 확인해주세요.')
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 }
 
 const handleCheckNickname = async () => {
+  // ... existing code ...
   if (!nickname.value) return
+  // ...
+  // Using existing logic but ensuring no regression
   try {
     const res = await checkNickname(nickname.value)
     if (res.data && res.data.isAvailable) {
@@ -87,59 +122,13 @@ const handleCheckNickname = async () => {
     isNicknameChecked.value = false
   }
 }
-
-const handleSignup = async () => {
-  errorMessage.value = ''
-
-  if (!email.value || !nickname.value || !password.value || !confirmPassword.value || !verificationCode.value) {
-    errorMessage.value = '모든 필드를 입력해주세요.'
-    return
-  }
-
-  if (password.value !== confirmPassword.value) {
-    errorMessage.value = '비밀번호가 일치하지 않습니다.'
-    return
-  }
-
-  if (!isVerificationSent.value) {
-    errorMessage.value = '이메일 인증을 진행해주세요.'
-    return
-  }
-
-  if (!isNicknameChecked.value) {
-    errorMessage.value = '닉네임 중복체크를 먼저 확인해주세요!'
-    return
-  }
-
-  isLoading.value = true
-
-  try {
-    // Assuming signup takes the code, given we have no verify endpoint
-    await signup({
-      email: email.value,
-      nickname: nickname.value,
-      password: password.value,
-      authCode: verificationCode.value // Send code with signup
-    })
-    await alertStore.showAlert('SIGNUP SUCCESS', '회원가입 성공! 로그인해주세요.')
-    emit('success')
-  } catch (error) {
-    console.error(error)
-    errorMessage.value = '회원가입에 실패했습니다. (인증번호 혹은 중복 확인)'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onUnmounted(() => {
-  if (timerInterval) clearInterval(timerInterval)
-})
+// ...
 </script>
 
 <template>
   <div
     class="flex flex-col gap-6 w-full max-w-md p-6 bg-[#0a0a0a]/80 border border-green-500/30 rounded-2xl shadow-xl backdrop-blur-sm">
-    <!-- Header -->
+    <!-- ... Header & Email ... -->
     <div class="text-center mb-2">
       <h2 class="text-2xl font-bold text-white tracking-widest">JOIN THE SQUAD</h2>
       <p class="text-xs text-gray-500 mt-1">CREATE YOUR ACCOUNT</p>
@@ -176,7 +165,7 @@ onUnmounted(() => {
     <div class="flex flex-col gap-2">
       <label class="text-green-400 font-bold text-xs tracking-wider">NICKNAME</label>
       <div class="flex gap-2 items-start">
-        <PixelInput v-model="nickname" placeholder="Player1" class="flex-1 !rounded-lg" />
+        <PixelInput v-model="nickname" placeholder="Nickname" class="flex-1 !rounded-lg" />
         <button @click="handleCheckNickname"
           class="h-10 px-4 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg border border-gray-600">
           CHECK
@@ -191,12 +180,26 @@ onUnmounted(() => {
     <div class="flex flex-col gap-2">
       <label class="text-green-400 font-bold text-xs tracking-wider">PASSWORD</label>
       <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
+      <div v-if="passwordError" class="text-red-400 font-mono text-[10px] text-right">
+        {{ passwordError }}
+      </div>
+      <div v-else-if="password.length >= 8" class="text-green-400 font-mono text-[10px] text-right">
+        사용 가능한 비밀번호입니다.
+      </div>
     </div>
 
     <!-- Confirm Password -->
     <div class="flex flex-col gap-2">
       <label class="text-green-400 font-bold text-xs tracking-wider">CONFIRM PASSWORD</label>
       <PixelInput v-model="confirmPassword" type="password" placeholder="********" class="!rounded-lg" />
+
+      <div v-if="passwordMatchError" class="text-red-400 font-mono text-[10px] text-right">
+        {{ passwordMatchError }}
+      </div>
+
+      <div v-else-if="confirmPassword && !passwordMatchError" class="text-green-400 font-mono text-[10px] text-right">
+        비밀번호가 일치합니다.
+      </div>
     </div>
 
     <div v-if="errorMessage"
