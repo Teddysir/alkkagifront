@@ -43,7 +43,18 @@ const fetchData = async () => {
 
         // 인증된 경우에만 유저 상태 조회
         if (authStore.isAuthenticated) {
-            promises.push(getCampaignUserStatus(campaignId).catch(() => null))
+            promises.push(
+                getCampaignUserStatus(campaignId)
+                    .catch(err => {
+                        // 400 or CAMPAIGN_USER_NOT_FOUND means user hasn't joined yet => null
+                        const data = err.response?.data
+                        if (err.response?.status === 400 || data?.errorCode === 'CAMPAIGN_USER_NOT_FOUND') {
+                            return null
+                        }
+                        console.warn('User status check failed, defaulting to null:', err)
+                        return null
+                    })
+            )
         }
 
         const [detailRes, problemsRes, statusRes] = await Promise.all(promises)
@@ -667,7 +678,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -729,7 +740,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
