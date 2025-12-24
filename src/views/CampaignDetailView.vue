@@ -80,21 +80,6 @@ watch(() => authStore.isAuthenticated, (newVal) => {
     if (newVal) fetchData()
 })
 
-// Button Logic
-const canWithdraw = computed(() => {
-    if (!campaign.value) return false
-    const isActiveUser = userStatus.value === 'ACTIVE'
-    const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
-    return isActiveUser && isCampaignRunning
-})
-
-const canJoin = computed(() => {
-    if (!campaign.value) return false
-    const isInactiveUser = userStatus.value !== 'ACTIVE'
-    const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
-    return isInactiveUser && isCampaignRunning
-})
-
 // --- Admin Search & Add ---
 const handleSearch = async () => {
     if (!searchKeyword.value) return
@@ -370,13 +355,13 @@ watch(problems, async () => {
 
                             <!-- User Join/Withdraw -->
                             <template v-if="campaign">
-                                <!-- Withdraw: Active User & Active Campaign -->
-                                <button v-if="canWithdraw" @click="handleWithdraw"
+                                <!-- Withdraw Button (If Users Status is ACTIVE) -->
+                                <button v-if="userStatus === 'ACTIVE'" @click="handleWithdraw"
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
                                     <PixelText>[ WITHDRAW ]</PixelText>
                                 </button>
-                                <!-- Join: Inactive User & Active Campaign -->
-                                <button v-else-if="canJoin" @click="handleJoin"
+                                <!-- Join Button (If Status is NOT ACTIVE & Campaign In Active Period) -->
+                                <button v-else-if="new Date() < new Date(campaign.endDate)" @click="handleJoin"
                                     class="px-4 py-2 border-2 border-green-500 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white transition-all text-xs font-bold animate-pulse">
                                     <PixelText>>> JOIN MISSION &lt;&lt;</PixelText>
                                 </button>
@@ -660,7 +645,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -722,7 +707,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
