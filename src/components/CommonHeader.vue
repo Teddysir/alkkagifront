@@ -22,6 +22,11 @@ const goHome = () => router.push('/')
 const goToAuth = () => router.push('/login')
 const goToProfile = () => router.push('/profile')
 
+const handleLogout = async () => {
+    await authStore.logout()
+    router.push('/')
+}
+
 const toggleNotifications = () => {
     showNotifications.value = !showNotifications.value
     if (showNotifications.value) {
@@ -172,7 +177,7 @@ onUnmounted(() => {
                     class="px-4 py-2 border-2 border-green-500 text-green-400 font-bold text-xs hover:bg-green-500 hover:text-white transition-colors">
                     <PixelText>[ MY_PAGE ]</PixelText>
                 </button>
-                <button @click="authStore.logout()"
+                <button @click="handleLogout"
                     class="px-4 py-2 border-2 border-red-500 text-red-400 font-bold text-xs hover:bg-red-500 hover:text-white transition-colors">
                     <PixelText>[ LOGOUT ]</PixelText>
                 </button>

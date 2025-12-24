@@ -8,9 +8,11 @@ import UserProfile from '@/components/mypage/UserProfile.vue'
 import PendingReviews from '@/components/mypage/PendingReviews.vue'
 import ReceivedReviews from '@/components/mypage/ReceivedReviews.vue'
 import GivenReviews from '@/components/mypage/GivenReviews.vue'
+import MySubmissions from '@/components/mypage/MySubmissions.vue'
 
 const isLoading = ref(true)
 const user = ref({})
+const activeTab = ref('dashboard') // 'dashboard' or 'submissions'
 
 const fetchProfile = async () => {
     try {
@@ -53,23 +55,45 @@ onMounted(() => {
             </aside>
 
             <!-- RIGHT COLUMN: Grid Layout -->
-            <main class="flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar pr-2">
+            <main class="flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar pr-2">
 
-                <!-- TOP ROW: Todo Reviews (2) -->
-                <div class="shrink-0 min-h-[250px]">
-                    <PendingReviews />
+                <!-- TAB NAVIGATION -->
+                <div class="flex gap-4 border-b border-gray-800 shrink-0">
+                    <button @click="activeTab = 'dashboard'"
+                        class="pb-2 px-2 text-sm font-bold tracking-widest transition-all border-b-2"
+                        :class="activeTab === 'dashboard' ? 'text-white border-green-500' : 'text-gray-600 border-transparent hover:text-gray-400'">
+                        DASHBOARD
+                    </button>
+                    <button @click="activeTab = 'submissions'"
+                        class="pb-2 px-2 text-sm font-bold tracking-widest transition-all border-b-2"
+                        :class="activeTab === 'submissions' ? 'text-white border-green-500' : 'text-gray-600 border-transparent hover:text-gray-400'">
+                        MY ARCHIVE
+                    </button>
                 </div>
 
-                <!-- BOTTOM ROW: Received(3) & Given(4) -->
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6">
-                    <!-- Received Reviews -->
-                    <div class="h-[300px]">
-                        <ReceivedReviews />
+                <!-- DASHBOARD TAB CONTENT -->
+                <div v-if="activeTab === 'dashboard'" class="flex flex-col gap-6 flex-1 min-h-0">
+                    <!-- TOP ROW: Todo Reviews (2) -->
+                    <div class="shrink-0 min-h-[250px]">
+                        <PendingReviews />
                     </div>
-                    <!-- Given Reviews -->
-                    <div class="h-[300px]">
-                        <GivenReviews />
+
+                    <!-- BOTTOM ROW: Received(3) & Given(4) -->
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6 flex-1 min-h-0">
+                        <!-- Received Reviews -->
+                        <div class="h-full">
+                            <ReceivedReviews />
+                        </div>
+                        <!-- Given Reviews -->
+                        <div class="h-full">
+                            <GivenReviews />
+                        </div>
                     </div>
+                </div>
+
+                <!-- SUBMISSIONS TAB CONTENT -->
+                <div v-else-if="activeTab === 'submissions'" class="flex-1 min-h-0 pb-6 w-full">
+                    <MySubmissions />
                 </div>
 
             </main>

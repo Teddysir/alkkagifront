@@ -20,3 +20,12 @@ export const getSubmissionDetail = async (submissionId) => {
     const response = await axios.get(`/submissions/${submissionId}`)
     return response.data
 }
+
+// GET /api/v1/submissions/me
+export const getMySubmissions = async (filters = {}) => {
+    // start filters: isSuccess, platform, sortBy, sortDirection, size, page
+    const response = await axios.get('/submissions/me', {
+        params: filters
+    })
+    return response.data
+}

@@ -88,6 +88,8 @@ const timelineItems = computed(() => {
         })
 
         if (i < sorted.length - 1) {
+            // Gap logic removed as per request to just show DAY 1, DAY 2 sequence
+            /*
             const currentEnd = new Date(sorted[i].endDate)
             const nextStart = new Date(sorted[i + 1].startDate)
             if (nextStart > currentEnd) {
@@ -99,6 +101,7 @@ const timelineItems = computed(() => {
                     isLocked: isLocked // Gaps also inherit lock if past the point
                 })
             }
+            */
         }
     }
     return items
@@ -459,8 +462,9 @@ watch(problems, async () => {
                             <!-- Spacer OR Review Box -->
                             <div class="hidden md:flex w-1/2 px-12 items-center"
                                 :class="idx % 2 === 0 ? 'justify-start' : 'justify-end'">
-                                <!-- REVIEW BOX (Only if Ended) -->
-                                <div v-if="isProblemEnded(item.data.endDate)" @click="goToReview(item.data)"
+                                <!-- REVIEW BOX (Only if Ended AND Submitted) -->
+                                <div v-if="isProblemEnded(item.data.endDate) && item.data.submitted"
+                                    @click="goToReview(item.data)"
                                     class="relative p-4 border border-purple-500/30 bg-purple-900/10 backdrop-blur-sm w-full max-w-sm group cursor-pointer hover:border-purple-500 transition-all hover:bg-purple-900/20 shadow-[0_0_0_rgba(168,85,247,0)] hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]">
                                     <h4 class="text-purple-300 font-bold mb-1 text-sm group-hover:text-purple-200">
                                         <PixelText>> START REVIEW</PixelText>
@@ -513,7 +517,7 @@ watch(problems, async () => {
                                         <div class="flex items-center gap-2 mb-1"
                                             :class="idx % 2 === 0 ? 'md:justify-end' : 'md:justify-start'">
                                             <span class="text-green-500 text-[10px] tracking-widest font-bold">
-                                                <PixelText>STAGE {{ item.index.toString().padStart(2, '0') }}
+                                                <PixelText>DAY {{ item.index.toString().padStart(2, '0') }}
                                                 </PixelText>
                                             </span>
                                             <span v-if="item.data.problem"
@@ -695,7 +699,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -757,7 +761,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

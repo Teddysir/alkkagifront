@@ -1,8 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getGivenReviews } from '@/api/review'
 import PixelText from '@/components/PixelText.vue'
 
+const router = useRouter()
 const reviews = ref([])
 const page = ref(0)
 const totalPages = ref(0)
@@ -89,7 +91,8 @@ const formatDate = (dateStr) => {
 
         <div v-else class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar relative z-10">
             <div v-for="(rev, index) in reviews" :key="rev.reviewId"
-                class="p-3 bg-black/40 border border-blue-900/50 flex flex-col gap-1 transition-all hover:bg-blue-900/10 animate-slide-fade-in rounded-xl"
+                @click="router.push(`/submission/${rev.submissionId}`)"
+                class="p-3 bg-black/40 border border-blue-900/50 flex flex-col gap-1 transition-all hover:bg-blue-900/10 hover:border-blue-500/50 animate-slide-fade-in rounded-xl cursor-pointer"
                 :style="{ animationDelay: `${index * 50}ms` }">
 
                 <div class="flex justify-between items-center border-b border-blue-900/30 pb-1 mb-1">
