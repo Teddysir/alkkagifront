@@ -77,26 +77,33 @@ const canJoin = computed(() => {
     // 1. 캠페인 데이터가 없거나 관리자면 미노출
     if (!campaign.value || authStore.isAdmin) return false
 
-    // 2. 참여 가능한 상태 (한 번도 참여 안 함(null) 또는 탈퇴함(WITHDRAWN))
-    const isNotParticipating = userStatus.value === null || userStatus.value === 'WITHDRAWN'
+    // 2. 참여 가능 기간 체크 (시작일 ~ 종료일 사이)
+    const now = new Date()
+    const startDate = new Date(campaign.value.startDate)
+    const endDate = new Date(campaign.value.endDate)
+    const isRunning = now >= startDate && now <= endDate
 
-    // 3. 참여 가능 기간 (현재 시간이 종료 시간보다 이전)
-    const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
+    if (!isRunning) return false
 
-    return isNotParticipating && isCampaignRunning
+    // 3. 참여 가능한 상태 (null, WITHDRAWN, WITHDRAW)
+    const s = userStatus.value
+    return s === null || s === 'WITHDRAWN' || s === 'WITHDRAW'
 })
 
 const canWithdraw = computed(() => {
     // 1. 캠페인 데이터가 없거나 관리자면 미노출
     if (!campaign.value || authStore.isAdmin) return false
 
-    // 2. 현재 참여 중인 상태 (ACTIVE)
-    const isActiveUser = userStatus.value === 'ACTIVE'
+    // 2. 탈퇴 가능 기간 체크 (진행 중일 때만 가능)
+    const now = new Date()
+    const startDate = new Date(campaign.value.startDate)
+    const endDate = new Date(campaign.value.endDate)
+    const isRunning = now >= startDate && now <= endDate
 
-    // 3. 캠페인 진행 기간 내에만 탈퇴 가능
-    const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
+    if (!isRunning) return false
 
-    return isActiveUser && isCampaignRunning
+    // 3. 현재 참여 중인 상태 (ACTIVE)
+    return userStatus.value === 'ACTIVE'
 })
 
 // --- Admin Search & Add ---
@@ -660,7 +667,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -722,7 +729,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
