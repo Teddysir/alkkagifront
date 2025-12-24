@@ -281,6 +281,31 @@ const goToSubmission = (item) => {
 }
 
 
+const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const d = new Date(dateString)
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+const formatDateTime = (dateString) => {
+    if (!dateString) return ''
+    const d = new Date(dateString)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+const getProblemStatus = (start, end) => {
+    const now = new Date()
+    const s = new Date(start)
+    const e = new Date(end)
+    if (now < s) return 'FUTURE'
+    if (now > e) return 'ENDED'
+    return 'CURRENT'
+}
+
+const isProblemEnded = (end) => {
+    return new Date() > new Date(end)
+}
+
 const getDifficultyColor = (diff) => {
     // ... same as before
     if (!diff) return 'text-gray-500'
@@ -678,7 +703,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -740,7 +765,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
