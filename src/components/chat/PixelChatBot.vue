@@ -57,16 +57,13 @@ watch(() => authStore.isAuthenticated, (newVal) => {
 
 const loadingText = ref('Thinking...')
 const loadingMessages = [
-    'Thinking...',
-    'Cleaning the server room...',
-    'Brewing virtual coffee...',
-    'Asking the rubber duck...',
-    'Training a neural net...',
-    'Slackin\' off...',
-    'Solving P vs NP...',
-    'Debugging my life choices...',
-    'Rebooting the universe...',
-    'Counting pixels...',
+    '딴짓중...',
+    '오늘 저녁 메뉴 뭐먹을지 고민중...',
+    '취업 걱정을 하는중..',
+    '오랜 고민을 하는중',
+    '끝나고 뭐할지 고민중',
+    '개발자가 이걸 어떻게 만들었을지 고민중..',
+    '백엔드 vs 프론트엔드 고민중..',
 ]
 
 let loadingInterval = null
@@ -123,29 +120,25 @@ const renderMarkdown = (text) => {
             </svg>
         </button>
 
-        <!-- LANDING PAGE RE-OPEN BUTTON (Arrow) -->
-        <button v-if="!chatStore.isOpen && isLandingPage" @click="toggleChat"
-            class="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center -translate-y-[150%] md:-translate-y-[120%] z-50 group animate-bounce">
-            <div
-                class="w-10 h-10 bg-black/80 border border-green-500 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(74,222,128,0.5)] group-hover:bg-green-500 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                    class="w-6 h-6 text-green-500 group-hover:text-black">
-                    <path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
-                </svg>
+        <!-- LANDING PAGE HOVER TRIGGER ZONE -->
+        <div v-if="isLandingPage && !chatStore.isOpen" @mouseenter="chatStore.openChat()"
+            class="fixed bottom-0 left-0 w-full h-8 z-[60] flex items-end justify-center group cursor-pointer">
+            <!-- Hint Line -->
+            <div class="w-1/3 h-1 bg-green-500/30 group-hover:bg-green-500/80 rounded-t-full transition-colors mb-1">
             </div>
-            <span
-                class="text-[10px] text-green-500 font-bold bg-black/50 px-2 rounded mt-1 opacity-0 group-hover:opacity-100 transition-opacity">OPEN
-                TERMINAL</span>
-        </button>
+        </div>
 
         <!-- CHAT WINDOW -->
         <transition name="slide-up">
-            <div v-if="chatStore.isOpen"
-                class="fixed bg-black/90 backdrop-blur-md border border-green-500/50 flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)] z-50 rounded-lg overflow-hidden font-mono"
-                :class="isLandingPage ? 'inset-0 m-auto w-[90%] md:w-[800px] h-[85vh] max-w-5xl' : 'bottom-8 right-8 w-[400px] md:w-[450px] h-[600px]'">
+            <div v-if="chatStore.isOpen" @mouseleave="isLandingPage ? chatStore.closeChat() : null"
+                class="fixed bg-black/90 backdrop-blur-md border border-green-500/50 flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)] z-50 overflow-hidden font-mono"
+                :class="isLandingPage
+                    ? 'bottom-0 left-1/2 -translate-x-1/2 w-[95%] md:w-[800px] h-[85vh] max-w-5xl rounded-t-lg border-b-0'
+                    : 'bottom-8 right-8 w-[400px] md:w-[450px] h-[600px] rounded-lg'">
 
                 <!-- Header -->
-                <div class="h-12 border-b border-green-500/30 flex justify-between items-center px-4 bg-green-500/10">
+                <div
+                    class="h-12 border-b border-green-500/30 flex justify-between items-center px-4 bg-green-500/10 shrink-0">
                     <div class="flex items-center gap-2">
                         <div class="w-2 h-2 bg-green-500 animate-pulse rounded-full"></div>
                         <PixelText class="text-green-500 text-sm font-bold">AI_COMMANDER_V1</PixelText>
@@ -189,7 +182,7 @@ const renderMarkdown = (text) => {
                 </div>
 
                 <!-- Footer / Input -->
-                <div class="p-3 border-t border-gray-700 bg-black/50 flex flex-col gap-2">
+                <div class="p-3 border-t border-gray-700 bg-black/50 flex flex-col gap-2 shrink-0">
 
                     <!-- Hashtag Selector -->
                     <div class="flex flex-wrap gap-2 px-1">
