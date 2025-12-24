@@ -41,7 +41,7 @@ const fetchData = async () => {
             getCampaignProblems(campaignId, { limit: 40 })
         ]
 
-        // Fetch user status if authenticated
+        // 인증된 경우에만 유저 상태 조회
         if (authStore.isAuthenticated) {
             promises.push(getCampaignUserStatus(campaignId).catch(() => null))
         }
@@ -49,26 +49,18 @@ const fetchData = async () => {
         const [detailRes, problemsRes, statusRes] = await Promise.all(promises)
 
         campaign.value = detailRes.data
-        if (problemsRes.data) {
-            if (Array.isArray(problemsRes.data)) {
-                problems.value = problemsRes.data
-            } else if (problemsRes.data.content) {
-                problems.value = problemsRes.data.content
-            } else {
-                console.warn('Unknown problem list format', problemsRes.data)
-                problems.value = []
-            }
-        }
+        problems.value = problemsRes.data?.content || problemsRes.data || []
 
+        // 상태값이 null이거나 API 에러가 나도 null로 유지하여 접근 허용
         if (statusRes && statusRes.data) {
-            userStatus.value = statusRes.data.campaignUserStatus
+            userStatus.value = statusRes.data.campaignUserStatus // 'ACTIVE', 'WITHDRAWN' 등
         } else {
             userStatus.value = null
         }
-        console.log('User Status:', userStatus.value)
 
     } catch (error) {
         console.error('Failed to load detail:', error)
+        // 캠페인 정보 자체를 못 가져올 때만 리다이렉트
         router.push('/campaigns')
     } finally {
         isLoading.value = false
@@ -81,18 +73,30 @@ watch(() => authStore.isAuthenticated, (newVal) => {
 })
 
 // Button Logic
-const canWithdraw = computed(() => {
-    if (!campaign.value) return false
-    const isActiveUser = userStatus.value === 'ACTIVE'
+const canJoin = computed(() => {
+    // 1. 캠페인 데이터가 없거나 관리자면 미노출
+    if (!campaign.value || authStore.isAdmin) return false
+
+    // 2. 참여 가능한 상태 (한 번도 참여 안 함(null) 또는 탈퇴함(WITHDRAWN))
+    const isNotParticipating = userStatus.value === null || userStatus.value === 'WITHDRAWN'
+
+    // 3. 참여 가능 기간 (현재 시간이 종료 시간보다 이전)
     const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
-    return isActiveUser && isCampaignRunning
+
+    return isNotParticipating && isCampaignRunning
 })
 
-const canJoin = computed(() => {
-    if (!campaign.value) return false
-    const isInactiveUser = userStatus.value !== 'ACTIVE'
+const canWithdraw = computed(() => {
+    // 1. 캠페인 데이터가 없거나 관리자면 미노출
+    if (!campaign.value || authStore.isAdmin) return false
+
+    // 2. 현재 참여 중인 상태 (ACTIVE)
+    const isActiveUser = userStatus.value === 'ACTIVE'
+
+    // 3. 캠페인 진행 기간 내에만 탈퇴 가능
     const isCampaignRunning = new Date() < new Date(campaign.value.endDate)
-    return isInactiveUser && isCampaignRunning
+
+    return isActiveUser && isCampaignRunning
 })
 
 // --- Admin Search & Add ---
@@ -240,25 +244,22 @@ const handleDeleteProblem = async (problem = null) => {
 }
 
 const goToSubmission = (item) => {
-    // 1. Check Participation
-    if (!campaign.value?.isParticipated && !authStore.isAdmin) {
+    // 1. 관리자는 프리패스, 사용자는 ACTIVE 상태여야 함
+    const isActive = userStatus.value === 'ACTIVE'
+
+    if (!authStore.isAdmin && !isActive) {
         alertStore.showAlert('ACCESS DENIED', 'JOIN CAMPAIGN FIRST')
         return
     }
 
-    // 2. Check if Active
+    // 2. 기간 체크
     const status = getProblemStatus(item.startDate, item.endDate)
     if (status !== 'CURRENT' && !authStore.isAdmin) {
         alertStore.showAlert('ACCESS DENIED', `PROBLEM IS ${status}`)
         return
     }
-    // Navigate
-    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
-}
 
-const goToReview = (item) => {
-    // Navigate to Review Match Page
-    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/review`)
+    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
 }
 
 
@@ -361,8 +362,7 @@ watch(problems, async () => {
                         </div>
 
                         <!-- Admin Action -->
-                        <div class="mt-2 flex justify-end gap-2">
-                            <!-- Admin Add -->
+                        <div class="mt-2 flex justify-end gap-2" v-if="!authStore.isAdmin"> <!-- Admin Add -->
                             <button v-if="authStore.isAdmin" @click="showAddModal = true"
                                 class="px-4 py-2 border-2 border-purple-500 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white transition-all text-xs font-bold">
                                 <PixelText>[ + ADMIN: ADD STAGE ]</PixelText>
@@ -370,16 +370,16 @@ watch(problems, async () => {
 
                             <!-- User Join/Withdraw -->
                             <template v-if="campaign">
-                                <!-- Withdraw: Active User & Active Campaign -->
                                 <button v-if="canWithdraw" @click="handleWithdraw"
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
                                     <PixelText>[ WITHDRAW ]</PixelText>
                                 </button>
-                                <!-- Join: Inactive User & Active Campaign -->
+
                                 <button v-else-if="canJoin" @click="handleJoin"
                                     class="px-4 py-2 border-2 border-green-500 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white transition-all text-xs font-bold animate-pulse">
-                                    <PixelText>>> JOIN MISSION &lt;&lt;</PixelText>
+                                    <PixelText> >> JOIN MISSION &lt;&lt;</PixelText>
                                 </button>
+
                             </template>
                         </div>
                     </div>
@@ -660,7 +660,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -722,7 +722,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
