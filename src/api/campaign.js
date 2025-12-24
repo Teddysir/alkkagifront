@@ -54,3 +54,9 @@ export const withdrawCampaign = async (campaignId) => {
     const response = await axios.delete(`/campaigns/withdraw/${campaignId}`)
     return response.data
 }
+
+export const getCampaignUserStatus = async (campaignId) => {
+    // GET /campaigns/{campaign_id}/users/status
+    const response = await axios.get(`/campaigns/${campaignId}/users/status`)
+    return response.data
+}

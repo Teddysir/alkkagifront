@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem, joinCampaign, withdrawCampaign } from '@/api/campaign'
+import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem, joinCampaign, withdrawCampaign, getCampaignUserStatus } from '@/api/campaign'
 import { useAuthStore } from '@/stores/auth'
 import { useAlertStore } from '@/stores/alert'
 import CommonHeader from '@/components/CommonHeader.vue'
@@ -16,6 +16,7 @@ const campaignId = route.params.id
 const isLoading = ref(true)
 const campaign = ref(null)
 const problems = ref([])
+const userStatus = ref(null)
 
 // Admin Modal State
 const showAddModal = ref(false)
@@ -28,92 +29,24 @@ const newProblemDates = ref({})
 // Animation references
 const problemElements = ref([])
 const observer = ref(null)
+// ... (omitted similar lines)
 
-// Detail Modal State
-const showDetailModal = ref(false)
-const selectedDetailProblem = ref(null)
-
-// Helper to format date
-const formatDate = (dateString) => {
-    if (!dateString) return '????. ??. ??'
-    const date = new Date(dateString)
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    return `${y}. ${m}. ${d}`
-}
-
-const formatDateTime = (dateString) => {
-    if (!dateString) return '????. ??. ?? ??:??'
-    const date = new Date(dateString)
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    const h = String(date.getHours()).padStart(2, '0')
-    const min = String(date.getMinutes()).padStart(2, '0')
-    return `${y}. ${m}. ${d} ${h}:${min}`
-}
-
-// Helper checks
-const isProblemEnded = (endDate) => {
-    return new Date() > new Date(endDate)
-}
-
-const getProblemStatus = (start, end) => {
-    const now = new Date()
-    const s = new Date(start)
-    const e = new Date(end)
-    if (now < s) return 'FUTURE'
-    if (now > e) return 'PAST'
-    return 'CURRENT'
-}
-
-// Timeline Items
-const timelineItems = computed(() => {
-    const items = []
-    if (!problems.value.length) return items
-
-    const sorted = [...problems.value].sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-
-    for (let i = 0; i < sorted.length; i++) {
-        // Visibility Logic: Lock after 3rd item if not playing & not active
-        // 0, 1, 2 are visible. 3+ are locked.
-        const isLocked = !campaign.value?.isParticipated && !authStore.isAdmin && i >= 3
-
-        items.push({
-            type: 'problem',
-            data: sorted[i],
-            index: i + 1,
-            isLocked: isLocked
-        })
-
-        if (i < sorted.length - 1) {
-            // Gap logic removed as per request to just show DAY 1, DAY 2 sequence
-            /*
-            const currentEnd = new Date(sorted[i].endDate)
-            const nextStart = new Date(sorted[i + 1].startDate)
-            if (nextStart > currentEnd) {
-                items.push({
-                    type: 'review_gap',
-                    startDate: sorted[i].endDate,
-                    endDate: sorted[i + 1].startDate,
-                    duration: Math.ceil((nextStart - currentEnd) / (1000 * 60 * 60 * 24)),
-                    isLocked: isLocked // Gaps also inherit lock if past the point
-                })
-            }
-            */
-        }
-    }
-    return items
-})
+// ...
 
 const fetchData = async () => {
     try {
         isLoading.value = true
-        const [detailRes, problemsRes] = await Promise.all([
+        const promises = [
             getCampaignDetail(campaignId),
             getCampaignProblems(campaignId, { limit: 40 })
-        ])
+        ]
+
+        // Fetch user status if authenticated
+        if (authStore.isAuthenticated) {
+            promises.push(getCampaignUserStatus(campaignId).catch(() => null))
+        }
+
+        const [detailRes, problemsRes, statusRes] = await Promise.all(promises)
 
         campaign.value = detailRes.data
         if (problemsRes.data) {
@@ -126,6 +59,14 @@ const fetchData = async () => {
                 problems.value = []
             }
         }
+
+        // Set User Status
+        if (statusRes && statusRes.data) {
+            userStatus.value = statusRes.data.campaignUserStatus
+        } else {
+            userStatus.value = null
+        }
+
     } catch (error) {
         console.error('Failed to load detail:', error)
         router.push('/campaigns')
@@ -409,13 +350,13 @@ watch(problems, async () => {
 
                             <!-- User Join/Withdraw -->
                             <template v-if="campaign">
-                                <!-- Withdraw Button (If Joined) -->
-                                <button v-if="campaign.isParticipated" @click="handleWithdraw"
+                                <!-- Withdraw Button (If Users Status is ACTIVE) -->
+                                <button v-if="userStatus === 'ACTIVE'" @click="handleWithdraw"
                                     class="px-4 py-2 border-2 border-red-500 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all text-xs font-bold">
                                     <PixelText>[ WITHDRAW ]</PixelText>
                                 </button>
-                                <!-- Join Button (If Not Joined & Campaign Active/Future) -->
-                                <button v-else-if="new Date() < new Date(campaign.endDate)" @click="handleJoin"
+                                <!-- Join Button (If Status is NOT ACTIVE & Campaign In Recruitment Period) -->
+                                <button v-else-if="new Date() < new Date(campaign.startDate)" @click="handleJoin"
                                     class="px-4 py-2 border-2 border-green-500 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white transition-all text-xs font-bold animate-pulse">
                                     <PixelText>>> JOIN MISSION &lt;&lt;</PixelText>
                                 </button>
