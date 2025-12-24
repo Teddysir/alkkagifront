@@ -77,7 +77,7 @@ watch(() => chatStore.isLoading, (newVal) => {
         }, 2000)
     } else {
         clearInterval(loadingInterval)
-        loadingText.value = 'Processing...'
+        loadingText.value = '질문 분석중..'
     }
 })
 
