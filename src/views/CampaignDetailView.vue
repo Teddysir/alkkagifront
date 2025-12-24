@@ -31,6 +31,9 @@ const problemElements = ref([])
 const observer = ref(null)
 // ... (omitted similar lines)
 
+const showDetailModal = ref(false)
+const selectedDetailProblem = ref(null)
+
 // ...
 
 const fetchData = async () => {
@@ -79,6 +82,7 @@ const fetchData = async () => {
 watch(() => authStore.isAuthenticated, (newVal) => {
     if (newVal) fetchData()
 })
+
 
 // --- Admin Search & Add ---
 const handleSearch = async () => {
@@ -274,7 +278,6 @@ const isProblemEnded = (end) => {
 }
 
 const getDifficultyColor = (diff) => {
-    // ... same as before
     if (!diff) return 'text-gray-500'
     if (diff.includes('BRONZE')) return 'text-orange-700'
     if (diff.includes('SILVER')) return 'text-gray-400'
@@ -284,6 +287,40 @@ const getDifficultyColor = (diff) => {
     if (diff.includes('RUBY')) return 'text-red-500'
     return 'text-gray-500'
 }
+const timelineItems = computed(() => {
+    if (!problems.value || problems.value.length === 0) return []
+
+    const sorted = [...problems.value].sort((a, b) =>
+        new Date(a.startDate) - new Date(b.startDate)
+    )
+
+    const items = []
+
+    sorted.forEach((problem, idx) => {
+        // 이전 문제와의 간격 계산
+        if (idx > 0) {
+            const prevEnd = new Date(sorted[idx - 1].endDate)
+            const currStart = new Date(problem.startDate)
+            const gapDays = Math.floor((currStart - prevEnd) / (1000 * 60 * 60 * 24))
+
+            if (gapDays > 0) {
+                items.push({
+                    type: 'gap',
+                    duration: gapDays
+                })
+            }
+        }
+
+        items.push({
+            type: 'problem',
+            index: idx + 1,
+            data: problem,
+            isLocked: !campaign.value?.isParticipated && !authStore.isAdmin && getProblemStatus(problem.startDate, problem.endDate) === 'FUTURE'
+        })
+    })
+
+    return items
+})
 
 onMounted(() => {
     fetchData()
@@ -671,7 +708,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -733,7 +770,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
