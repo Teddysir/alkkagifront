@@ -54,8 +54,13 @@ export const streamChat = async ({
                 const trimmed = line.trim();
                 if (trimmed.startsWith('data:')) {
                     const content = trimmed.substring(5);
-                    // 🟢 수정 포인트 2: 데이터가 비어있지 않을 때만 콜백 실행
-                    if (onChunk && content) onChunk(content);
+
+                    // User Request: If content is empty/whitespace, treat as double newline
+                    if (!content.trim()) {
+                        if (onChunk) onChunk('\n\n');
+                    } else {
+                        if (onChunk) onChunk(content);
+                    }
                 }
             }
         }

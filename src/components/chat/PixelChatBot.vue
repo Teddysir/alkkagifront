@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useAuthStore } from '@/stores/auth'
 import PixelText from '@/components/PixelText.vue'
@@ -22,6 +22,22 @@ marked.setOptions({
 const chatStore = useChatStore()
 const authStore = useAuthStore()
 const route = useRoute()
+
+const isLandingPage = computed(() => route.path === '/')
+
+const selectedType = ref('algorithm')
+const types = [
+    { label: '#ALGORITHM', value: 'algorithm' },
+    { label: '#STRATEGY', value: 'strategy' },
+    { label: '#FAQ', value: 'faq' },
+    { label: '#HINT', value: 'hint' },
+    { label: '#MOTIVATOR', value: 'motivator' },
+]
+
+const selectType = (val) => {
+    selectedType.value = val
+    chatStore.setRequestType(val)
+}
 
 const inputMessage = ref('')
 const msgContainer = ref(null)
@@ -76,15 +92,14 @@ const renderMarkdown = (text) => {
                 <path
                     d="M12 2C13.1 2 14 2.9 14 4V5H16V7H17V9H18V14H17V17H21V19H17V20C17 21.1 16.1 22 15 22H9C7.9 22 7 21.1 7 20V19H3V17H7V14H6V9H7V7H8V5C8 3.9 8.9 2 10 2H12M10 4H12V5H10V4M9 7V9H15V7H9M9 10V14H15V10H9M11 11H13V13H11V11Z" />
             </svg>
-            <!-- Badge -->
-            <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-black">
-            </div>
+
         </button>
 
         <!-- CHAT WINDOW -->
         <transition name="slide-up">
             <div v-if="chatStore.isOpen"
-                class="fixed bottom-8 right-8 w-[350px] md:w-[400px] h-[500px] bg-black/80 backdrop-blur-md border border-green-500/50 flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)] z-50 rounded-lg overflow-hidden font-mono">
+                class="fixed bg-black/90 backdrop-blur-md border border-green-500/50 flex flex-col shadow-[0_0_30px_rgba(0,0,0,0.8)] z-50 rounded-lg overflow-hidden font-mono"
+                :class="isLandingPage ? 'inset-0 m-auto w-[90%] md:w-[800px] h-[85vh] max-w-5xl' : 'bottom-8 right-8 w-[400px] md:w-[450px] h-[600px]'">
 
                 <!-- Header -->
                 <div class="h-12 border-b border-green-500/30 flex justify-between items-center px-4 bg-green-500/10">
@@ -128,7 +143,19 @@ const renderMarkdown = (text) => {
                 </div>
 
                 <!-- Footer / Input -->
-                <div class="p-3 border-t border-gray-700 bg-black/50">
+                <div class="p-3 border-t border-gray-700 bg-black/50 flex flex-col gap-2">
+
+                    <!-- Hashtag Selector -->
+                    <div class="flex flex-wrap gap-2 px-1">
+                        <button v-for="t in types" :key="t.value" @click="selectType(t.value)"
+                            class="px-2 py-0.5 text-[10px] font-bold border transition-all duration-300 rounded"
+                            :class="selectedType === t.value
+                                ? 'bg-green-500 text-black border-green-500'
+                                : 'bg-black/50 text-gray-500 border-gray-700 hover:text-green-400 hover:border-green-400'">
+                            {{ t.label }}
+                        </button>
+                    </div>
+
                     <form @submit.prevent="handleSend" class="relative">
                         <input v-model="inputMessage" type="text" placeholder="Type command..."
                             class="w-full bg-[#111] border border-gray-600 text-white text-xs p-3 pr-10 outline-none focus:border-green-500 transition-colors rounded" />
