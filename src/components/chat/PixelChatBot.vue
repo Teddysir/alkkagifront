@@ -55,15 +55,15 @@ watch(() => authStore.isAuthenticated, (newVal) => {
     }
 })
 
-const loadingText = ref('Thinking...')
+const loadingText = ref('생각중...')
 const loadingMessages = [
     '딴짓중...',
     '오늘 저녁 메뉴 뭐먹을지 고민중...',
-    '취업 걱정을 하는중..',
-    '오랜 고민을 하는중',
-    '끝나고 뭐할지 고민중',
-    '개발자가 이걸 어떻게 만들었을지 고민중..',
-    '백엔드 vs 프론트엔드 고민중..',
+    '취업 걱정을 하는중...',
+    '오랜 고민을 하는중...',
+    '끝나고 뭐할지 고민중...',
+    '개발자가 이걸 어떻게 만들었을지 고민중...',
+    '백엔드 vs 프론트엔드 고민중...',
 ]
 
 let loadingInterval = null
@@ -77,7 +77,7 @@ watch(() => chatStore.isLoading, (newVal) => {
         }, 2000)
     } else {
         clearInterval(loadingInterval)
-        loadingText.value = '질문 분석중..'
+        loadingText.value = '질문 분석중...'
     }
 })
 
