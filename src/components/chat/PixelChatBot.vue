@@ -55,6 +55,35 @@ watch(() => authStore.isAuthenticated, (newVal) => {
     }
 })
 
+const loadingText = ref('Thinking...')
+const loadingMessages = [
+    'Thinking...',
+    'Cleaning the server room...',
+    'Brewing virtual coffee...',
+    'Asking the rubber duck...',
+    'Training a neural net...',
+    'Slackin\' off...',
+    'Solving P vs NP...',
+    'Debugging my life choices...',
+    'Rebooting the universe...',
+    'Counting pixels...',
+]
+
+let loadingInterval = null
+
+watch(() => chatStore.isLoading, (newVal) => {
+    if (newVal) {
+        clearInterval(loadingInterval)
+        loadingInterval = setInterval(() => {
+            const idx = Math.floor(Math.random() * loadingMessages.length)
+            loadingText.value = loadingMessages[idx]
+        }, 2000)
+    } else {
+        clearInterval(loadingInterval)
+        loadingText.value = 'Processing...'
+    }
+})
+
 const scrollToBottom = () => {
     if (msgContainer.value) {
         msgContainer.value.scrollTop = msgContainer.value.scrollHeight
@@ -83,8 +112,8 @@ const renderMarkdown = (text) => {
 
 <template>
     <div class="z-[9999]" v-if="authStore.isAuthenticated">
-        <!-- FLOATING ROBOT BUTTON (FAB) -->
-        <button v-if="!chatStore.isOpen && !['/', '/login'].includes(route.path)" @click="toggleChat"
+        <!-- FLOATING ROBOT BUTTON (FAB) - Standard (Not on Landing) -->
+        <button v-if="!chatStore.isOpen && !isLandingPage && !['/login'].includes(route.path)" @click="toggleChat"
             class="fixed bottom-8 right-8 w-14 h-14 bg-black/80 border-2 border-green-500 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_rgba(74,222,128,0.5)] z-50 group">
             <!-- Robot Icon SVG -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -92,7 +121,21 @@ const renderMarkdown = (text) => {
                 <path
                     d="M12 2C13.1 2 14 2.9 14 4V5H16V7H17V9H18V14H17V17H21V19H17V20C17 21.1 16.1 22 15 22H9C7.9 22 7 21.1 7 20V19H3V17H7V14H6V9H7V7H8V5C8 3.9 8.9 2 10 2H12M10 4H12V5H10V4M9 7V9H15V7H9M9 10V14H15V10H9M11 11H13V13H11V11Z" />
             </svg>
+        </button>
 
+        <!-- LANDING PAGE RE-OPEN BUTTON (Arrow) -->
+        <button v-if="!chatStore.isOpen && isLandingPage" @click="toggleChat"
+            class="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center -translate-y-[150%] md:-translate-y-[120%] z-50 group animate-bounce">
+            <div
+                class="w-10 h-10 bg-black/80 border border-green-500 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(74,222,128,0.5)] group-hover:bg-green-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                    class="w-6 h-6 text-green-500 group-hover:text-black">
+                    <path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
+                </svg>
+            </div>
+            <span
+                class="text-[10px] text-green-500 font-bold bg-black/50 px-2 rounded mt-1 opacity-0 group-hover:opacity-100 transition-opacity">OPEN
+                TERMINAL</span>
         </button>
 
         <!-- CHAT WINDOW -->
@@ -129,15 +172,18 @@ const renderMarkdown = (text) => {
                         </div>
 
                         <!-- BUBBLE -->
-                        <div class="max-w-[80%] p-3 text-xs leading-relaxed break-words rounded" :class="msg.type === 'USER'
+                        <div class="max-w-[80%] p-4 text-xs leading-relaxed break-words rounded relative" :class="msg.type === 'USER'
                             ? 'bg-green-600 text-black border border-green-400 font-bold'
                             : 'bg-[#1a1a1a] text-gray-300 border border-gray-700'">
                             <span v-if="msg.type === 'USER'">{{ msg.content }}</span>
                             <div v-else v-html="renderMarkdown(msg.content)" class="markdown-body"></div>
 
+                            <!-- Loading Text -->
                             <span
                                 v-if="msg.type === 'ROBOT' && idx === chatStore.messages.length - 1 && chatStore.isLoading"
-                                class="animate-pulse">_</span>
+                                class="block mt-2 text-[10px] text-green-500/80 animate-pulse font-mono">
+                                > {{ loadingText }}
+                            </span>
                         </div>
                     </div>
                 </div>
