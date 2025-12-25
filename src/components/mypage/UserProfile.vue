@@ -97,8 +97,8 @@ const submitEditProfile = async () => {
             nickname: editForm.value.nickname,
             description: editForm.value.description
         })
-        await alertStore.showAlert('SUCCESS', 'Profile Updated!')
         showEditProfileModal.value = false
+        await alertStore.showAlert('SUCCESS', 'Profile Updated!')
         emit('refresh')
     } catch (e) {
         console.error(e)
@@ -111,8 +111,8 @@ const submitUpdateImage = async () => {
     if (!selectedFile.value) return
     try {
         await updateProfileImage(selectedFile.value)
-        await alertStore.showAlert('SUCCESS', 'Image Updated!')
         showEditImageModal.value = false
+        await alertStore.showAlert('SUCCESS', 'Image Updated!')
         imageUrl.value = ''
         emit('refresh')
     } catch (e) {
@@ -133,6 +133,7 @@ const handleFileChange = (e) => {
 }
 
 const handleDeleteImage = async () => {
+    showEditImageModal.value = false
     const result = await alertStore.showConfirm('DELETE', 'Remove profile image?')
     if (!result) return
     try {

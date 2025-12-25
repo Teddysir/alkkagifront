@@ -42,15 +42,15 @@ onMounted(() => {
 
 <template>
     <div
-        class="pixel-window bg-[#1e1e1e] border-2 border-green-900 p-4 h-full flex flex-col relative overflow-hidden group">
+        class="pixel-window bg-[#1e1e1e] border-2 border-green-900 p-3 h-full flex flex-col relative overflow-hidden group">
         <!-- Header -->
-        <h3 class="text-green-400 font-bold flex items-center gap-2 mb-4 shrink-0">
+        <h3 class="text-green-400 font-bold flex items-center gap-2 mb-2 shrink-0">
             <PixelText>> TODAY'S MISSION</PixelText>
             <span class="text-[10px] text-gray-500 animate-pulse" v-if="!isLoading">UPDATING...</span>
         </h3>
 
         <!-- Content -->
-        <div class="flex-1 min-h-0 flex flex-col gap-4">
+        <div class="flex-1 min-h-0 flex flex-col gap-2">
             <div v-if="isLoading"
                 class="flex-1 flex items-center justify-center text-green-500/50 text-xs animate-pulse">
                 SCANNING SECTOR...
@@ -66,7 +66,7 @@ onMounted(() => {
 
                 <!-- Card Body -->
                 <div
-                    class="absolute inset-0 bg-black/80 border-2 border-gray-700 hover:border-green-400 transition-all duration-300 transform group-hover/card:-translate-y-1 group-hover/card:shadow-[0_0_15px_rgba(74,222,128,0.3)] flex flex-col p-4 overflow-hidden rounded-xl">
+                    class="absolute inset-0 bg-black/80 border-2 border-gray-700 hover:border-green-400 transition-all duration-300 transform group-hover/card:-translate-y-1 group-hover/card:shadow-[0_0_15px_rgba(74,222,128,0.3)] flex flex-col p-3 overflow-hidden rounded-xl">
 
                     <!-- Background Grid Effect -->
                     <div
@@ -75,7 +75,7 @@ onMounted(() => {
 
                     <!-- Header -->
                     <div
-                        class="relative z-10 flex justify-between items-center mb-2 border-b border-gray-800 pb-2 group-hover/card:border-green-500/30 transition-colors">
+                        class="relative z-10 flex justify-between items-center mb-1 border-b border-gray-800 pb-1 group-hover/card:border-green-500/30 transition-colors">
                         <span class="text-[10px] font-mono text-gray-400 group-hover/card:text-green-300">
                             MISSION #{{ idx + 1 }}
                         </span>
@@ -88,19 +88,19 @@ onMounted(() => {
                     <!-- Title -->
                     <div class="relative z-10 flex-1 flex items-center">
                         <h4
-                            class="text-gray-200 text-sm md:text-base font-bold leading-tight group-hover/card:text-white transition-colors line-clamp-2">
+                            class="text-gray-200 text-xs md:text-sm font-bold leading-tight group-hover/card:text-white transition-colors line-clamp-2">
                             {{ p.title }}
                         </h4>
                     </div>
 
                     <!-- Footer / Action -->
                     <div
-                        class="relative z-10 flex justify-between items-center mt-2 pt-2 border-t border-gray-800 group-hover/card:border-green-500/30 transition-colors">
+                        class="relative z-10 flex justify-between items-center mt-1 pt-1 border-t border-gray-800 group-hover/card:border-green-500/30 transition-colors">
                         <span class="text-[10px] font-bold" :class="getDifficultyColor(p.difficultyType)">
                             {{ p.difficultyType }}
                         </span>
                         <div
-                            class="text-[10px] bg-gray-800 group-hover/card:bg-green-600 group-hover/card:text-black text-gray-500 px-2 py-1 transition-colors font-bold uppercase tracking-wider rounded">
+                            class="text-[10px] bg-gray-800 group-hover/card:bg-green-600 group-hover/card:text-black text-gray-500 px-2 py-0.5 transition-colors font-bold uppercase tracking-wider rounded">
                             START >
                         </div>
                     </div>

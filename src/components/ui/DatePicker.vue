@@ -186,14 +186,14 @@ onBeforeUnmount(() => {
                     class="absolute top-full mt-2 left-0 z-50 rounded-md border border-gray-700 bg-[#1e1e1e] p-3 shadow-md w-[280px]">
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-4">
-                        <button @click="prevMonth"
+                        <button type="button" @click="prevMonth"
                             class="h-7 w-7 bg-transparent hover:bg-white/10 rounded-md flex items-center justify-center transition-colors">
                             <ChevronLeft class="h-4 w-4 text-white" />
                         </button>
                         <div class="text-sm font-medium text-white">
                             {{ currentMonthYear }}
                         </div>
-                        <button @click="nextMonth"
+                        <button type="button" @click="nextMonth"
                             class="h-7 w-7 bg-transparent hover:bg-white/10 rounded-md flex items-center justify-center transition-colors">
                             <ChevronRight class="h-4 w-4 text-white" />
                         </button>
@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
                     <div class="grid grid-cols-7 gap-1">
                         <template v-for="(date, i) in calendarDays" :key="i">
                             <div v-if="!date" class="h-9 w-9"></div>
-                            <button v-else @click="selectDate(date)" :class="cn(
+                            <button type="button" v-else @click="selectDate(date)" :class="cn(
                                 'h-9 w-9 p-0 font-normal text-sm rounded-md flex items-center justify-center transition-all',
                                 isSelected(date)
                                     ? 'bg-white text-black font-bold hover:bg-gray-200 focus:bg-gray-200'

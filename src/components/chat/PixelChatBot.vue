@@ -31,7 +31,7 @@ const types = [
     { label: '#STRATEGY', value: 'strategy' },
     { label: '#FAQ', value: 'faq' },
     // { label: '#HINT', value: 'hint' },
-    // { label: '#MOTIVATOR', value: 'motivator' },
+    { label: '#MOTIVATOR', value: 'motivator' },
 ]
 
 const selectType = (val) => {

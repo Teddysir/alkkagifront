@@ -37,11 +37,7 @@ const handleFileChange = (e) => {
 const handleSubmit = async () => {
     if (isLoading.value) return
 
-    // Basic validation
-    if (!form.value.title || !form.value.startDate || !form.value.endDate) {
-        alertStore.showAlert('VALIDATION ERROR', 'Please fill in all required fields.')
-        return
-    }
+
 
     isLoading.value = true
 
@@ -130,15 +126,6 @@ const handleSubmit = async () => {
                             placeholder="캠페인 설명을 입력해주세요."></textarea>
                     </div>
 
-                    <!-- Capacity -->
-                    <div class="space-y-2">
-                        <label class="text-xs text-green-400 font-bold block">
-                            <PixelText>CAPACITY</PixelText>
-                        </label>
-                        <input v-model.number="form.capacity" type="number" min="1"
-                            class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none transition-colors font-sans" />
-                    </div>
-
                     <!-- Dates Row -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
@@ -154,6 +141,17 @@ const handleSubmit = async () => {
                             <DatePicker v-model="form.endDate" placeholder="Select end date" />
                         </div>
                     </div>
+
+                    <!-- Capacity -->
+                    <div class="space-y-2">
+                        <label class="text-xs text-green-400 font-bold block">
+                            <PixelText>CAPACITY</PixelText>
+                        </label>
+                        <input v-model.number="form.capacity" type="number" min="1"
+                            class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none transition-colors font-sans" />
+                    </div>
+
+
 
                     <!-- File Upload -->
                     <div class="space-y-2">
