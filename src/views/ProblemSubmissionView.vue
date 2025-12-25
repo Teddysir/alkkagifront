@@ -132,11 +132,6 @@ const handleSubmit = async () => {
         strategy.value = strategyInstance.getValue()
     }
 
-    if (!code.value || !strategy.value) {
-        triggerAlert('Please fill in all fields (Code & Strategy).', true)
-        return
-    }
-
     const payload = {
         language: language.value,
         code: code.value,
