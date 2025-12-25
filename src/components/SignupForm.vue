@@ -203,91 +203,93 @@ const handleSignup = async () => {
       </p>
     </div>
 
-    <!-- Email & Verification -->
-    <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">
-        <PixelText>EMAIL</PixelText>
-      </label>
-      <div class="flex gap-2 items-start relative">
-        <div class="flex-1">
-          <PixelInput v-model="email" placeholder="example@email.com" class="w-full !rounded-lg"
-            :disabled="isVerificationSent && timer > 0" />
-        </div>
-        <button @click="handleSendVerification" :disabled="isLoading || (isVerificationSent && timer > 0)"
-          class="h-10 px-4 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-all shadow-lg flex items-center justify-center whitespace-nowrap">
-          <PixelText>{{ isVerificationSent ? 'RESEND' : 'VERIFY' }}</PixelText>
-        </button>
-      </div>
-
-      <!-- Verification Code Input (Shown after send) -->
-      <transition name="slide-fade">
-        <div v-if="isVerificationSent" class="flex gap-2 items-center mt-2 animate-slide-in">
-          <div class="relative flex-1">
-            <PixelInput v-model="verificationCode" placeholder="ENTER CODE"
-              class="w-full !rounded-lg !border-green-500/50" />
-            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-xs font-mono font-bold">{{
-              formattedTimer }}</span>
+    <form @submit.prevent="handleSignup" class="flex flex-col gap-6 w-full">
+      <!-- Email & Verification -->
+      <div class="flex flex-col gap-2">
+        <label class="text-green-400 font-bold text-xs tracking-wider">
+          <PixelText>EMAIL</PixelText>
+        </label>
+        <div class="flex gap-2 items-start relative">
+          <div class="flex-1">
+            <PixelInput v-model="email" placeholder="example@email.com" class="w-full !rounded-lg"
+              :disabled="isVerificationSent && timer > 0" />
           </div>
+          <button @click.prevent="handleSendVerification" :disabled="isLoading || (isVerificationSent && timer > 0)"
+            class="h-10 px-4 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-all shadow-lg flex items-center justify-center whitespace-nowrap">
+            <PixelText>{{ isVerificationSent ? 'RESEND' : 'VERIFY' }}</PixelText>
+          </button>
         </div>
-      </transition>
-    </div>
 
-    <!-- Nickname -->
-    <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">
-        <PixelText>NICKNAME</PixelText>
-      </label>
-      <div class="flex gap-2 items-start">
-        <PixelInput v-model="nickname" placeholder="Nickname" class="flex-1 !rounded-lg" />
-        <button @click="handleCheckNickname"
-          class="h-10 px-4 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg border border-gray-600 flex items-center justify-center">
-          <PixelText>CHECK</PixelText>
-        </button>
-      </div>
-      <div v-if="nicknameWarning" class="text-red-400 font-mono text-xs text-right">
-        {{ nicknameWarning }}
-      </div>
-    </div>
-
-    <!-- Password -->
-    <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">
-        <PixelText>PASSWORD</PixelText>
-      </label>
-      <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
-      <div v-if="passwordError" class="text-red-400 font-mono text-[10px] text-right">
-        {{ passwordError }}
-      </div>
-      <div v-else-if="password.length >= 8" class="text-green-400 font-mono text-[10px] text-right">
-        사용 가능한 비밀번호입니다.
-      </div>
-    </div>
-
-    <!-- Confirm Password -->
-    <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">
-        <PixelText>CONFIRM PASSWORD</PixelText>
-      </label>
-      <PixelInput v-model="confirmPassword" type="password" placeholder="********" class="!rounded-lg" />
-
-      <div v-if="passwordMatchError" class="text-red-400 font-mono text-[10px] text-right">
-        {{ passwordMatchError }}
+        <!-- Verification Code Input (Shown after send) -->
+        <transition name="slide-fade">
+          <div v-if="isVerificationSent" class="flex gap-2 items-center mt-2 animate-slide-in">
+            <div class="relative flex-1">
+              <PixelInput v-model="verificationCode" placeholder="ENTER CODE"
+                class="w-full !rounded-lg !border-green-500/50" />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-red-400 text-xs font-mono font-bold">{{
+                formattedTimer }}</span>
+            </div>
+          </div>
+        </transition>
       </div>
 
-      <div v-else-if="confirmPassword && !passwordMatchError" class="text-green-400 font-mono text-[10px] text-right">
-        비밀번호가 일치합니다.
+      <!-- Nickname -->
+      <div class="flex flex-col gap-2">
+        <label class="text-green-400 font-bold text-xs tracking-wider">
+          <PixelText>NICKNAME</PixelText>
+        </label>
+        <div class="flex gap-2 items-start">
+          <PixelInput v-model="nickname" placeholder="Nickname" class="flex-1 !rounded-lg" />
+          <button @click.prevent="handleCheckNickname"
+            class="h-10 px-4 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg border border-gray-600 flex items-center justify-center">
+            <PixelText>CHECK</PixelText>
+          </button>
+        </div>
+        <div v-if="nicknameWarning" class="text-red-400 font-mono text-xs text-right">
+          {{ nicknameWarning }}
+        </div>
       </div>
-    </div>
 
-    <div v-if="errorMessage"
-      class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs text-center font-bold">
-      ! {{ errorMessage }}
-    </div>
+      <!-- Password -->
+      <div class="flex flex-col gap-2">
+        <label class="text-green-400 font-bold text-xs tracking-wider">
+          <PixelText>PASSWORD</PixelText>
+        </label>
+        <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
+        <div v-if="passwordError" class="text-red-400 font-mono text-[10px] text-right">
+          {{ passwordError }}
+        </div>
+        <div v-else-if="password.length >= 8" class="text-green-400 font-mono text-[10px] text-right">
+          사용 가능한 비밀번호입니다.
+        </div>
+      </div>
 
-    <button @click="handleSignup" :disabled="isLoading"
-      class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center">
-      <PixelText>INITIALIZE ID</PixelText>
-    </button>
+      <!-- Confirm Password -->
+      <div class="flex flex-col gap-2">
+        <label class="text-green-400 font-bold text-xs tracking-wider">
+          <PixelText>CONFIRM PASSWORD</PixelText>
+        </label>
+        <PixelInput v-model="confirmPassword" type="password" placeholder="********" class="!rounded-lg" />
+
+        <div v-if="passwordMatchError" class="text-red-400 font-mono text-[10px] text-right">
+          {{ passwordMatchError }}
+        </div>
+
+        <div v-else-if="confirmPassword && !passwordMatchError" class="text-green-400 font-mono text-[10px] text-right">
+          비밀번호가 일치합니다.
+        </div>
+      </div>
+
+      <div v-if="errorMessage"
+        class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-xs text-center font-bold">
+        ! {{ errorMessage }}
+      </div>
+
+      <button type="submit" :disabled="isLoading"
+        class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center">
+        <PixelText>INITIALIZE ID</PixelText>
+      </button>
+    </form>
   </div>
 </template>
 

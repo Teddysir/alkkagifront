@@ -77,7 +77,7 @@ onUnmounted(() => {
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center gap-6">
                 <button @click="router.push('/campaigns')"
-                    class="text-gray-400 hover:text-white transition-colors text-xs font-bold tracking-widest flex items-center gap-1 group">
+                    class="text-gray-400 hover:text-white transition-colors text-sm font-bold tracking-widest flex items-center gap-1 group">
                     <span
                         class="w-1.5 h-1.5 bg-gray-600 group-hover:bg-purple-500 rounded-full transition-colors"></span>
                     <PixelText>CAMPAIGN</PixelText>
@@ -95,7 +95,7 @@ onUnmounted(() => {
 
                 <!-- Welcome Msg -->
                 <span class="text-gray-400 font-mono text-xs hidden md:inline">
-                    WELCOME, <span class="text-green-400">{{ authStore.user?.nickname || 'FIGHTER' }}</span>
+                    반갑습니다!, <span class="text-green-400">{{ authStore.user?.nickname || 'FIGHTER' }}</span>
                 </span>
 
                 <!-- Notification Bell -->
@@ -143,7 +143,7 @@ onUnmounted(() => {
                                         <div class="flex justify-between items-center">
                                             <span class="text-[10px] text-gray-500">{{ noti.type }}</span>
                                             <span class="text-[10px] text-gray-600">{{ formatDate(noti.createdAt)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 

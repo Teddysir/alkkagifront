@@ -88,8 +88,8 @@ const getDDay = (endDate) => {
 
             <select v-model="sortOption"
                 class="bg-black text-xs text-purple-300 border border-purple-900 p-1 outline-none focus:border-purple-500 pixel-font rounded">
-                <option value="deadline">HURRY UP!</option>
-                <option value="latest">NEWEST</option>
+                <option value="deadline">마감순</option>
+                <option value="latest">최신순</option>
             </select>
         </div>
 
@@ -116,7 +116,7 @@ const getDDay = (endDate) => {
 
                 <div class="flex-1 min-w-0">
                     <h4 class="text-white text-sm font-bold truncate group-hover:text-purple-300">{{ item.problemTitle
-                        }}</h4>
+                    }}</h4>
                     <p class="text-[10px] text-gray-500 truncate">{{ item.campaignTitle }}</p>
                 </div>
 
