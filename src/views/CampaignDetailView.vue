@@ -650,12 +650,12 @@ watch(problems, async () => {
                             <div
                                 class="absolute left-0 md:left-1/2 -translate-x-[3px] md:-translate-x-1/2 w-1.5 h-1.5 bg-yellow-500/50 rounded-full z-10">
                             </div>
-                            <div
+                            <!-- <div
                                 class="bg-yellow-500/10 border border-yellow-500/20 px-3 py-1 rounded-sm backdrop-blur-sm ml-8 md:ml-0">
                                 <span class="text-[10px] text-yellow-200 uppercase tracking-wider font-mono">
                                     Rest: {{ item.duration }} Days
                                 </span>
-                            </div>
+                            </div> -->
                         </div>
 
                     </template>
