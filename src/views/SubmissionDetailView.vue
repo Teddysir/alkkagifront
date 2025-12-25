@@ -193,6 +193,7 @@ const fetchData = async () => {
 }
 
 onMounted(() => {
+    console.log("test")
     fetchData()
 })
 
@@ -250,7 +251,7 @@ onBeforeUnmount(() => {
                     class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col min-h-[500px] shadow-lg relative shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                     <div class="bg-[#2d2d2d] p-2 flex justify-between items-center border-b border-gray-700 shrink-0">
                         <span class="text-xs text-gray-400 font-bold px-2">SOURCE CODE ({{ submission.language
-                            }})</span>
+                        }})</span>
                         <!-- Copy Button could go here -->
                     </div>
                     <div ref="editorContainer" class="flex-1 w-full relative" :style="{ height: editorHeight + 'px' }">
