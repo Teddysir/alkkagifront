@@ -1,17 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue'
 import { CalendarIcon, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-vue-next'
-import { cn } from '@/lib/utils' // Assuming this exists or I will create a utility helper locally if needed. 
-// Actually I don't know if '@/lib/utils' exists. I'll check or inline it.
-// Checking package.json, `clsx` and `tailwind-merge` are there. 
-// I'll inline the helper to be safe, or check if it exists. 
-// Standard Shadcn setup usually has it. I'll assume I should inline it for safety to avoid errors.
-import { clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-function cn(...inputs) {
-    return twMerge(clsx(inputs))
-}
+import { cn } from '@/lib/utils'
 
 const props = defineProps({
     modelValue: {
@@ -168,13 +158,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="flex gap-4 font-sans items-end">
+    <div class="flex gap-4 font-sans items-end w-full">
         <!-- Date Picker -->
-        <div class="flex flex-col gap-2 relative" ref="containerRef">
+        <div class="flex flex-col gap-2 relative flex-1" ref="containerRef">
             <label class="px-1 text-xs font-medium text-gray-300">Date</label>
 
             <button type="button" @click="toggleOpen" :class="cn(
-                'flex h-10 w-[240px] items-center justify-between rounded-md border border-gray-700 bg-[#0a0a0a] px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/5 transition-colors',
+                'flex h-10 w-full items-center justify-between rounded-md border border-gray-700 bg-[#0a0a0a] px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 hover:bg-white/5 transition-colors',
                 !selectedDate && 'text-muted-foreground'
             )">
                 <div class="flex items-center gap-2 text-gray-200">
@@ -239,7 +229,7 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-2">
             <label class="px-1 text-xs font-medium text-gray-300">Time</label>
             <input type="time" step="1" :value="timeValue" @change="handleTimeChange"
-                class="flex h-10 w-full rounded-md border border-gray-700 bg-[#0a0a0a] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert" />
+                class="flex h-10 w-full rounded-md border border-gray-700 bg-[#0a0a0a] px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white appearance-none [&::-webkit-calendar-picker-indicator]:hidden" />
         </div>
     </div>
 </template>

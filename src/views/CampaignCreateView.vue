@@ -89,7 +89,7 @@ const handleSubmit = async () => {
         <CommonHeader />
 
         <div class="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
-            <div class="w-full max-w-2xl bg-[#1e1e1e] border-2 border-green-500/50 p-6 md:p-8 pixel-window relative">
+            <div class="w-full max-w-4xl bg-[#1e1e1e] border-2 border-green-500/50 p-6 md:p-8 pixel-window relative">
                 <!-- Decorative Header -->
                 <div
                     class="absolute top-0 left-0 right-0 h-8 bg-green-500/10 border-b border-green-500/30 flex items-center px-4 justify-between">
@@ -133,7 +133,7 @@ const handleSubmit = async () => {
                     <!-- Capacity -->
                     <div class="space-y-2">
                         <label class="text-xs text-green-400 font-bold block">
-                            <PixelText>UNIT CAPACITY</PixelText>
+                            <PixelText>CAPACITY</PixelText>
                         </label>
                         <input v-model.number="form.capacity" type="number" min="1"
                             class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none transition-colors font-sans" />
