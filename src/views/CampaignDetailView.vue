@@ -386,7 +386,7 @@ watch(problems, async () => {
                                 class="px-2 py-0.5 bg-green-900/50 border border-green-500 text-green-400 text-[10px] tracking-widest">
                                 <PixelText>SECTOR {{ campaign.id.toString().padStart(3, '0') }}</PixelText>
                             </div>
-                            <span class="text-gray-500 text-xs">// {{ formatDate(campaign.startDate) }} ~ {{
+                            <span class="text-gray-500 text-s">{{ formatDate(campaign.startDate) }} ~ {{
                                 formatDate(campaign.endDate) }}</span>
                         </div>
                         <h1 class="text-2xl md:text-4xl text-white leading-tight">
@@ -400,7 +400,7 @@ watch(problems, async () => {
                             <div class="flex flex-col">
                                 <span class="text-[10px] text-gray-500">CAPACITY</span>
                                 <span class="text-xl text-green-400 font-bold font-sans">{{ campaign.capacity }}
-                                    UNITS</span>
+                                    명</span>
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-[10px] text-gray-500">STATUS</span>
@@ -708,7 +708,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -770,7 +770,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
