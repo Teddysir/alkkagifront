@@ -44,7 +44,7 @@ onMounted(() => {
         <CommonHeader />
 
         <div
-            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 h-full overflow-hidden">
+            class="relative z-10 flex-1 max-w-[1200px] mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 h-full overflow-hidden">
 
             <!-- LEFT COLUMN: Profile (1) -->
             <aside class="w-full h-full overflow-y-auto custom-scrollbar">

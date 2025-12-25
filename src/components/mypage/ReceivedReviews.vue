@@ -63,23 +63,27 @@ const formatDate = (dateStr) => {
 
 <template>
     <section
-        class="h-full bg-[#1e1e1e]/80 border border-green-500/30 p-6 flex flex-col relative overflow-hidden group/section rounded-2xl shadow-lg">
-        <!-- Glow -->
-        <div
-            class="absolute inset-0 bg-green-500/5 pointer-events-none group-hover/section:bg-green-500/10 transition-colors">
-        </div>
+        class="h-full bg-[#1e1e1e] border-2 border-green-500/50 p-0 flex flex-col relative overflow-hidden group/section pixel-window shadow-none">
 
-        <div class="flex justify-between items-center mb-4 shrink-0 relative z-10">
-            <h3 class="text-green-400 font-bold flex items-center gap-2">
-                <PixelText>> RECEIVED REVIEWS</PixelText>
+        <!-- Header Bar -->
+        <div
+            class="h-8 bg-green-500/10 border-b border-green-500/30 flex items-center px-4 justify-between shrink-0 relative z-10">
+            <h3 class="text-green-400 font-bold flex items-center gap-2 text-xs">
+                <PixelText>> RECEIVED_REVIEWS</PixelText>
             </h3>
             <div class="flex gap-2">
                 <button @click="prevPage" :disabled="page === 0"
-                    class="text-xs px-2 py-1 bg-gray-800 text-green-400 border border-green-900 disabled:opacity-30 hover:bg-gray-700 rounded-lg">&lt;</button>
-                <span class="text-xs text-gray-500 self-center">{{ page + 1 }} / {{ totalPages || 1 }}</span>
+                    class="text-[10px] px-2 py-0.5 bg-gray-800 text-green-400 border border-green-900 disabled:opacity-30 hover:bg-gray-700 rounded-none">&lt;</button>
+                <span class="text-[10px] text-gray-500 self-center font-mono">{{ page + 1 }} / {{ totalPages || 1
+                    }}</span>
                 <button @click="nextPage" :disabled="page >= totalPages - 1"
-                    class="text-xs px-2 py-1 bg-gray-800 text-green-400 border border-green-900 disabled:opacity-30 hover:bg-gray-700 rounded-lg">&gt;</button>
+                    class="text-[10px] px-2 py-0.5 bg-gray-800 text-green-400 border border-green-900 disabled:opacity-30 hover:bg-gray-700 rounded-none">&gt;</button>
             </div>
+        </div>
+
+        <!-- Glow -->
+        <div
+            class="absolute inset-0 bg-green-500/5 pointer-events-none group-hover/section:bg-green-500/10 transition-colors z-0">
         </div>
 
         <div v-if="isLoading" class="flex-1 flex items-center justify-center text-green-500/50 animate-pulse text-xs">
@@ -90,7 +94,7 @@ const formatDate = (dateStr) => {
             NO REVIEWS RECEIVED YET.
         </div>
 
-        <div v-else class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar relative z-10">
+        <div v-else class="flex-1 overflow-y-auto space-y-3 pr-2 p-4 custom-scrollbar relative z-10">
             <div v-for="(rev, index) in reviews" :key="rev.reviewId"
                 @click="router.push(`/submission/${rev.submissionId}`)"
                 class="p-3 bg-black/40 border border-green-900/50 flex flex-col gap-1 transition-all hover:bg-green-900/10 hover:border-green-500/50 animate-slide-fade-in rounded-xl cursor-pointer"
@@ -114,6 +118,10 @@ const formatDate = (dateStr) => {
 </template>
 
 <style scoped>
+.pixel-window {
+    box-shadow: 4px 4px 0px #000000;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }

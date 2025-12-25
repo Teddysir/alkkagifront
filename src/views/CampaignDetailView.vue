@@ -243,6 +243,30 @@ const goToSubmission = (item) => {
         return
     }
     // Navigate
+    // Navigate to Submission Detail (My Submission)
+    if (item.submitted && item.submissionId) {  // Assuming submissionId exists if submitted
+        router.push(`/submission/${item.submissionId}`)
+    } else {
+        // Fallback: Go to Submit Page (New Submission)
+        router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
+    }
+}
+
+const goToNewSubmission = (item) => {
+    // 1. Check Participation
+    if (!campaign.value?.isParticipated && !authStore.isAdmin) {
+        alertStore.showAlert('ACCESS DENIED', 'JOIN CAMPAIGN FIRST')
+        return
+    }
+
+    // 2. Check if Active
+    const status = getProblemStatus(item.startDate, item.endDate)
+    if (status !== 'CURRENT' && !authStore.isAdmin) {
+        alertStore.showAlert('ACCESS DENIED', `PROBLEM IS ${status}`)
+        return
+    }
+
+    // Always navigate to submission page
     router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
 }
 
@@ -582,6 +606,15 @@ watch(problems, async () => {
                                             class="mt-1 text-green-400 text-[10px] animate-pulse font-bold">
                                             >> CURRENTLY ACTIVE
                                         </div>
+
+                                        <!-- NEW SUBMIT BUTTON -->
+                                        <div v-if="getProblemStatus(item.data.startDate, item.data.endDate) === 'CURRENT' && item.data.submitted"
+                                            class="mt-3 pt-3 border-t border-gray-800">
+                                            <button @click.stop="goToNewSubmission(item.data)"
+                                                class="w-full bg-green-500/10 border border-green-500/50 text-green-400 text-xs font-bold py-2 hover:bg-green-500 hover:text-black transition-all">
+                                                [ + NEW SUBMIT ]
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -708,7 +741,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -769,7 +802,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

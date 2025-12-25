@@ -148,7 +148,7 @@ const handleDeleteImage = async () => {
 
 <template>
     <div
-        class="h-full bg-[#1e1e1e]/90 border border-green-500/50 p-6 pixel-window relative flex flex-col items-center text-center rounded-2xl shadow-xl overflow-hidden group/profile">
+        class="h-full bg-[#1e1e1e]/90 border-2 border-green-500/50 p-6 pixel-window relative flex flex-col items-center text-center shadow-none overflow-hidden group/profile">
 
         <!-- Tier Background Glow -->
         <div class="absolute inset-0 z-0 opacity-10 transition-colors duration-500"

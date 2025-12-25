@@ -74,23 +74,27 @@ const getDDay = (endDate) => {
 
 <template>
     <section
-        class="h-full bg-[#1e1e1e]/80 border border-purple-500/30 p-6 flex flex-col relative overflow-hidden group/section rounded-2xl shadow-lg">
-        <!-- Glow Effect -->
-        <div
-            class="absolute inset-0 bg-purple-500/5 pointer-events-none group-hover/section:bg-purple-500/10 transition-colors">
-        </div>
+        class="h-full bg-[#1e1e1e] border-2 border-purple-500/50 p-0 flex flex-col relative overflow-hidden group/section pixel-window shadow-none">
 
-        <div class="flex justify-between items-center mb-4 shrink-0 relative z-10">
-            <h3 class="text-purple-400 font-bold flex items-center gap-2">
-                <PixelText>> PENDING REVIEWS</PixelText>
-                <span class="text-xs text-gray-500">({{ totalCount }})</span>
+        <!-- Header Bar -->
+        <div
+            class="h-8 bg-purple-500/10 border-b border-purple-500/30 flex items-center px-4 justify-between shrink-0 relative z-10">
+            <h3 class="text-purple-400 font-bold flex items-center gap-2 text-xs">
+                <PixelText>> PENDING_REVIEWS</PixelText>
+                <span class="text-[10px] text-gray-500">({{ totalCount }})</span>
             </h3>
 
+            <!-- Sort Select -->
             <select v-model="sortOption"
-                class="bg-black text-xs text-purple-300 border border-purple-900 p-1 outline-none focus:border-purple-500 pixel-font rounded">
-                <option value="deadline">마감순</option>
-                <option value="latest">최신순</option>
+                class="bg-black text-[10px] text-purple-300 border border-purple-900 p-0.5 outline-none focus:border-purple-500 pixel-font rounded-none">
+                <option value="deadline">DEADLINE</option>
+                <option value="latest">LATEST</option>
             </select>
+        </div>
+
+        <!-- Glow Effect -->
+        <div
+            class="absolute inset-0 bg-purple-500/5 pointer-events-none group-hover/section:bg-purple-500/10 transition-colors z-0">
         </div>
 
         <div v-if="isLoading" class="flex-1 flex items-center justify-center text-purple-500/50 animate-pulse text-xs">
@@ -102,7 +106,7 @@ const getDDay = (endDate) => {
         </div>
 
         <div v-else
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 custom-scrollbar relative z-10">
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 p-4 custom-scrollbar relative z-10">
             <div v-for="(item, index) in reviews" :key="item.submissionId"
                 class="bg-black/40 border border-purple-900/50 p-4 hover:border-purple-500 hover:bg-purple-900/20 transition-all cursor-pointer group animate-slide-fade-in flex flex-col gap-2 rounded-xl"
                 :style="{ animationDelay: `${index * 50}ms` }" @click="goToSubmission(item.submissionId)">
@@ -116,7 +120,7 @@ const getDDay = (endDate) => {
 
                 <div class="flex-1 min-w-0">
                     <h4 class="text-white text-sm font-bold truncate group-hover:text-purple-300">{{ item.problemTitle
-                    }}</h4>
+                        }}</h4>
                     <p class="text-[10px] text-gray-500 truncate">{{ item.campaignTitle }}</p>
                 </div>
 
@@ -138,6 +142,10 @@ const getDDay = (endDate) => {
 
 .pixel-font {
     font-family: 'DungGeunMo', sans-serif;
+}
+
+.pixel-window {
+    box-shadow: 4px 4px 0px #000000;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
