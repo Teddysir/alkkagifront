@@ -137,11 +137,11 @@ onMounted(() => {
                                 class="hover:bg-green-500/10 cursor-pointer transition-colors group">
                                 <td class="p-3 font-mono text-gray-500">{{ item.submission.id }}</td>
                                 <td class="p-3 flex items-center gap-2">
-                                    <div
+                                    <!-- <div
                                         class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden border border-gray-600">
                                         <img :src="item.user.profileImage || 'https://via.placeholder.com/30'"
                                             class="w-full h-full object-cover">
-                                    </div>
+                                    </div> -->
                                     <span class="text-white font-bold group-hover:text-green-300">{{ item.user.nickname
                                         }}</span>
                                 </td>
