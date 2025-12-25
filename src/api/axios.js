@@ -44,6 +44,10 @@ instance.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
+            // Login 실패 시 401이 오더라도 리다이렉트 하지 않음
+            if (error.config.url.includes('/login')) {
+                return Promise.reject(error)
+            }
             localStorage.removeItem('Authorization')
             localStorage.removeItem('user')
             window.location.href = '/login'

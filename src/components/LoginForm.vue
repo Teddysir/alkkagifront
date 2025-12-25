@@ -49,25 +49,27 @@ const handleLogin = async () => {
       </p>
     </div>
 
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-2">
-        <label class="text-green-400 font-bold text-xs tracking-wider">
-          <PixelText>EMAIL</PixelText>
-        </label>
-        <PixelInput v-model="email" placeholder="example@email.com" class="!rounded-lg" />
+    <form @submit.prevent="handleLogin" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-2">
+          <label class="text-green-400 font-bold text-xs tracking-wider">
+            <PixelText>EMAIL</PixelText>
+          </label>
+          <PixelInput v-model="email" placeholder="example@email.com" class="!rounded-lg" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-green-400 font-bold text-xs tracking-wider">
+            <PixelText>PASSWORD</PixelText>
+          </label>
+          <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
+        </div>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label class="text-green-400 font-bold text-xs tracking-wider">
-          <PixelText>PASSWORD</PixelText>
-        </label>
-        <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
-      </div>
-    </div>
-
-    <button @click="handleLogin" :disabled="isLoading"
-      class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center">
-      <PixelText>LET'S GO!</PixelText>
-    </button>
+      <button type="submit" :disabled="isLoading"
+        class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center">
+        <PixelText>LET'S GO!</PixelText>
+      </button>
+    </form>
   </div>
 </template>
