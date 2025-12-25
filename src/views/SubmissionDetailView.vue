@@ -84,18 +84,16 @@ const createEditor = () => {
             readOnly: true,
             domReadOnly: true,
             scrollbar: {
-                vertical: 'hidden', // Hide vertical scrollbar since we auto-grow
-                handleMouseWheel: false // Let parent scroll
+                vertical: 'hidden',
+                handleMouseWheel: false
             }
         })
 
-        // Auto-grow logic
+        // Auto-grow logic - 코드 길이에 맞게 높이 자동 조절
         const updateHeight = () => {
             const contentHeight = editorInstance.getContentHeight()
-            // Constrain min height 500
+            // 최소 500px, 최대 제한 없음 (또는 원하면 최대값 설정 가능)
             editorHeight.value = Math.max(500, contentHeight)
-            // Force layout update if needed, though automaticLayout might handle container resize if we change style
-            // But we change container style, so automaticLayout observes it.
         }
 
         editorInstance.onDidContentSizeChange(updateHeight)
@@ -130,15 +128,12 @@ const fetchData = async () => {
                 let proxyUrl = originalUrl;
 
                 if (proxyUrl.includes(cloudfrontDomain)) {
-                    // Regex replace to handle http/https generically
                     proxyUrl = proxyUrl.replace(/^https?:\/\/d3ud9ocg2cusae\.cloudfront\.net/, '/code-cdn');
                 }
 
                 const response = await fetch(proxyUrl);
                 if (response.ok) {
                     const text = await response.text();
-                    // Check if response is HTML (proxy failed/fallback to index.html)
-                    // If it starts with <!, it's likely <!DOCTYPE html>
                     if (!text.trim().startsWith('<!') && !text.trim().startsWith('<html')) {
                         codeText = text;
                         fetchSuccess = true;
@@ -147,7 +142,6 @@ const fetchData = async () => {
                     }
                 }
             } catch (ignore) {
-                // Proxy failed, proceed to fallback
                 console.warn('[Proxy Error] Failed to fetch via proxy.', ignore);
             }
 
@@ -179,7 +173,6 @@ const fetchData = async () => {
         }
 
         // 4. 에디터 및 마크다운 초기화
-        // DOM이 렌더링된 후 에디터를 생성해야 하므로 isLoading을 먼저 끄고 nextTick 대기
         isLoading.value = false
         await nextTick()
         await initEditors()
@@ -189,11 +182,9 @@ const fetchData = async () => {
         alert("데이터를 로드하는 중 오류가 발생했습니다.")
         isLoading.value = false
     }
-    // finally 블록 제거 (위에서 처리함)
 }
 
 onMounted(() => {
-    console.log("test")
     fetchData()
 })
 
@@ -246,15 +237,15 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Code Viewer -->
+                <!-- Code Viewer (높이 자동 조절) -->
                 <div
-                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col min-h-[500px] shadow-lg relative shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                    class="bg-[#1e1e1e]/90 border border-gray-700 flex flex-col shadow-lg relative shrink-0 transition-all hover:border-green-500/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                     <div class="bg-[#2d2d2d] p-2 flex justify-between items-center border-b border-gray-700 shrink-0">
                         <span class="text-xs text-gray-400 font-bold px-2">SOURCE CODE ({{ submission.language
-                        }})</span>
-                        <!-- Copy Button could go here -->
+                            }})</span>
                     </div>
-                    <div ref="editorContainer" class="flex-1 w-full relative" :style="{ height: editorHeight + 'px' }">
+
+                    <div ref="editorContainer" class="w-full relative" :style="{ height: editorHeight + 'px' }">
                     </div>
                 </div>
 
@@ -266,9 +257,6 @@ onBeforeUnmount(() => {
 
             <!-- RIGHT COLUMN: Stats & Strategy -->
             <div class="w-full md:w-[400px] flex flex-col gap-4 shrink-0 pb-4">
-
-                <!-- User Info -->
-                <!-- ... -->
 
                 <!-- Algo Tags -->
                 <div
@@ -376,6 +364,4 @@ onBeforeUnmount(() => {
     border-bottom: 1px solid #333;
     padding-bottom: 0.2em;
 }
-
-/* ... etc (Simplified for brevity as they are scoped) ... */
 </style>
