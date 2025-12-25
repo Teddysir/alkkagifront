@@ -14,7 +14,7 @@ const sub = props.match?.submissionDetailResponseDto
 
 const truncatedStrategy = computed(() => {
     if (!sub?.strategy) return ''
-    return sub.strategy.length > 15 ? sub.strategy.substring(0, 15) + '...' : sub.strategy
+    return sub.strategy.length > 25 ? sub.strategy.substring(0, 25) + '...' : sub.strategy
 })
 
 const goToDetail = () => {

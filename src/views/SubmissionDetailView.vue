@@ -120,33 +120,61 @@ const fetchData = async () => {
 
         // 3. 코드 원문 가져오기 (CloudFront URL인 경우)
         if (submission.value.code && submission.value.code.startsWith('http')) {
+            const originalUrl = submission.value.code;
+            let codeText = '';
+            let fetchSuccess = false;
+
+            // 1. Try Proxy First
             try {
-                // Proxy URL creation
-                let fetchUrl = submission.value.code;
                 const cloudfrontDomain = 'd3ud9ocg2cusae.cloudfront.net';
+                let proxyUrl = originalUrl;
 
-                if (fetchUrl.includes(cloudfrontDomain)) {
-                    // Replace domain with local proxy path
-                    // e.g. https://domain.net/path -> /code-cdn/path
-                    fetchUrl = fetchUrl.replace(`https://${cloudfrontDomain}`, '/code-cdn');
+                if (proxyUrl.includes(cloudfrontDomain)) {
+                    // Regex replace to handle http/https generically
+                    proxyUrl = proxyUrl.replace(/^https?:\/\/d3ud9ocg2cusae\.cloudfront\.net/, '/code-cdn');
                 }
 
-                const response = await fetch(fetchUrl, {
-                    method: 'GET'
-                })
+                const response = await fetch(proxyUrl);
+                if (response.ok) {
+                    const text = await response.text();
+                    // Check if response is HTML (proxy failed/fallback to index.html)
+                    // If it starts with <!, it's likely <!DOCTYPE html>
+                    if (!text.trim().startsWith('<!') && !text.trim().startsWith('<html')) {
+                        codeText = text;
+                        fetchSuccess = true;
+                    } else {
+                        console.warn('[Proxy Warning] Received HTML instead of code. Proxy might be misconfigured.');
+                    }
+                }
+            } catch (ignore) {
+                // Proxy failed, proceed to fallback
+                console.warn('[Proxy Error] Failed to fetch via proxy.', ignore);
+            }
 
-                if (!response.ok) throw new Error("Network response was not ok")
+            // 2. Fallback: Direct Fetch (if Proxy failed or returned HTML)
+            if (!fetchSuccess) {
+                try {
+                    console.log('Attempting direct fetch from CloudFront...');
+                    const response = await fetch(originalUrl);
+                    if (response.ok) {
+                        codeText = await response.text();
+                        fetchSuccess = true;
+                    } else {
+                        throw new Error('Direct fetch returned status: ' + response.status);
+                    }
+                } catch (e) {
+                    console.error('Direct fetch failed:', e);
+                }
+            }
 
-                const text = await response.text()
-                submission.value.code = text // URL을 실제 코드로 교체
-
-                // 만약 에디터가 이미 생성되어 있다면 값을 새로 세팅
+            if (fetchSuccess) {
+                submission.value.code = codeText;
                 if (editorInstance) {
-                    editorInstance.setValue(text)
+                    editorInstance.setValue(codeText);
                 }
-            } catch (err) {
-                console.error("CloudFront Fetch Error:", err)
-                submission.value.code = "// [ERROR] 소스 코드를 불러오는 데 실패했습니다.\n// CORS 설정 혹은 파일 경로를 확인하세요."
+            } else {
+                submission.value.code = "// [ERROR] 소스 코드를 불러올 수 없습니다.\n// (Proxy & Direct Fetch both failed)\n// 관리자에게 문의해주세요.";
+                if (editorInstance) editorInstance.setValue(submission.value.code);
             }
         }
 
@@ -174,10 +202,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div
-        class="h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative overflow-hidden selection:bg-green-500/30">
+    <div class="min-h-screen bg-[#0a0a0a] text-[#d4d4d4] font-mono flex flex-col relative selection:bg-green-500/30">
         <!-- Background -->
-        <div class="absolute inset-0 z-0">
+        <div class="fixed inset-0 z-0">
             <img src="@/assets/pixel_city_bg.png" class="w-full h-full object-cover opacity-60 fixed"
                 alt="Cyberpunk City" />
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm fixed"></div>
@@ -193,10 +220,10 @@ onBeforeUnmount(() => {
 
         <!-- Main Content -->
         <div v-else-if="submission"
-            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 h-full overflow-hidden animate-slide-up">
+            class="relative z-10 flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 flex flex-col md:flex-row gap-6 animate-slide-up">
 
             <!-- LEFT COLUMN: Problem + Code + Reviews -->
-            <div class="flex-1 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar min-w-0 pr-2">
+            <div class="flex-1 flex flex-col gap-4 min-w-0">
 
                 <!-- Problem Info Card -->
                 <div
@@ -237,7 +264,7 @@ onBeforeUnmount(() => {
             </div>
 
             <!-- RIGHT COLUMN: Stats & Strategy -->
-            <div class="w-full md:w-[400px] flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar shrink-0 pb-4">
+            <div class="w-full md:w-[400px] flex flex-col gap-4 shrink-0 pb-4">
 
                 <!-- User Info -->
                 <!-- ... -->

@@ -624,7 +624,6 @@ watch(problems, async () => {
                 <div class="p-4 border-b border-gray-700 bg-purple-900/20 flex justify-between items-center shrink-0">
                     <div class="flex items-center gap-4">
                         <PixelText class="text-purple-400 text-lg">> ADD SEQUENCE // PROBLEMS</PixelText>
-                        <span class="text-xs text-gray-500">Add problems to this campaign sector.</span>
                     </div>
                     <button @click="showAddModal = false" class="text-gray-500 hover:text-white px-2">X</button>
                 </div>
@@ -709,7 +708,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -770,7 +769,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

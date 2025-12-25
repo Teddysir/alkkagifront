@@ -141,11 +141,11 @@ const getConnectorPath = (index, total, side) => {
                 <div class="flex flex-col items-center z-30 relative w-72 md:w-96 shrink-0 h-full transition-all duration-700 ease-out transform"
                     :class="step3 ? 'opacity-100 scale-100' : 'opacity-0 scale-90'">
                     <!-- Header Area -->
-                    <div class="h-16 flex flex-col justify-center items-center mb-4">
+                    <!-- <div class="h-16 flex flex-col justify-center items-center mb-4">
                         <div class="text-center text-green-400 font-bold">
                             <PixelText variant="title">ME</PixelText>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- Content Area -->
                     <div class="flex-1 w-full flex items-center justify-center">

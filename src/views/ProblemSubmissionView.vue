@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
                         <label class="text-xs text-gray-400 font-bold">ALGORITHM TAGS</label>
                         <div class="relative">
                             <div class="flex gap-2">
-                                <PixelInput v-model="algoKeyword" placeholder="Search Algo..." class="flex-1"
+                                <PixelInput v-model="algoKeyword" placeholder="Algorithms.." class="flex-1"
                                     @keyup.enter="handleAlgoSearch" />
                                 <PixelButton variant="secondary" text="FIND" @click="handleAlgoSearch"
                                     class="!h-10 !px-4 !text-xs" />
