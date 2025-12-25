@@ -9,7 +9,7 @@ export const useChatStore = defineStore('chat', () => {
         // Initial Greeting
         {
             type: 'ROBOT',
-            content: 'HELLO. I AM YOUR AI ASSISTANT.\nSELECT A PROTOCOL OR ASK ME A QUESTION DIRECTLY.'
+            content: '안녕하세요! 알까기 봇입니다. 원하시는 해시태그를 골라주신다음, 궁금한 점을 바로 질문해 주세요.'
         }
     ])
     const isLoading = ref(false)
