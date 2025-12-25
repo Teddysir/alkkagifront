@@ -32,6 +32,6 @@ export const getSubmissionDetail = async (submissionId) => {
 
 export const searchAlgorithms = async (keyword) => {
     // GET /algorithms?keyword={keyword}
-    const response = await axios.get('/algorithms', { params: { keyword } })
+    const response = await axios.get('/submissions/algorithms', { params: { keyword } })
     return response.data
 }
