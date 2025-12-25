@@ -2,6 +2,7 @@
 import { ref, watch, onUnmounted, computed } from 'vue'
 import PixelInput from '@/components/PixelInput.vue'
 import PixelButton from '@/components/PixelButton.vue'
+import PixelText from '@/components/PixelText.vue'
 import { signup, checkNickname, sendVerificationEmail } from '@/api/auth'
 import { useAlertStore } from '@/stores/alert'
 
@@ -194,13 +195,19 @@ const handleSignup = async () => {
     class="flex flex-col gap-6 w-full max-w-md p-6 bg-[#0a0a0a]/80 border border-green-500/30 rounded-2xl shadow-xl backdrop-blur-sm">
     <!-- ... Header & Email ... -->
     <div class="text-center mb-2">
-      <h2 class="text-2xl font-bold text-white tracking-widest">JOIN THE SQUAD</h2>
-      <p class="text-xs text-gray-500 mt-1">CREATE YOUR ACCOUNT</p>
+      <h2 class="text-2xl font-bold text-white tracking-widest">
+        <PixelText>JOIN THE ALKKAGI</PixelText>
+      </h2>
+      <p class="text-xs text-gray-500 mt-1">
+        <PixelText>CREATE YOUR ACCOUNT</PixelText>
+      </p>
     </div>
 
     <!-- Email & Verification -->
     <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">EMAIL</label>
+      <label class="text-green-400 font-bold text-xs tracking-wider">
+        <PixelText>EMAIL</PixelText>
+      </label>
       <div class="flex gap-2 items-start relative">
         <div class="flex-1">
           <PixelInput v-model="email" placeholder="example@email.com" class="w-full !rounded-lg"
@@ -208,7 +215,7 @@ const handleSignup = async () => {
         </div>
         <button @click="handleSendVerification" :disabled="isLoading || (isVerificationSent && timer > 0)"
           class="h-10 px-4 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition-all shadow-lg flex items-center justify-center whitespace-nowrap">
-          {{ isVerificationSent ? 'RESEND' : 'VERIFY' }}
+          <PixelText>{{ isVerificationSent ? 'RESEND' : 'VERIFY' }}</PixelText>
         </button>
       </div>
 
@@ -227,12 +234,14 @@ const handleSignup = async () => {
 
     <!-- Nickname -->
     <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">NICKNAME</label>
+      <label class="text-green-400 font-bold text-xs tracking-wider">
+        <PixelText>NICKNAME</PixelText>
+      </label>
       <div class="flex gap-2 items-start">
         <PixelInput v-model="nickname" placeholder="Nickname" class="flex-1 !rounded-lg" />
         <button @click="handleCheckNickname"
-          class="h-10 px-4 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg border border-gray-600">
-          CHECK
+          class="h-10 px-4 bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg border border-gray-600 flex items-center justify-center">
+          <PixelText>CHECK</PixelText>
         </button>
       </div>
       <div v-if="nicknameWarning" class="text-red-400 font-mono text-xs text-right">
@@ -242,7 +251,9 @@ const handleSignup = async () => {
 
     <!-- Password -->
     <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">PASSWORD</label>
+      <label class="text-green-400 font-bold text-xs tracking-wider">
+        <PixelText>PASSWORD</PixelText>
+      </label>
       <PixelInput v-model="password" type="password" placeholder="********" class="!rounded-lg" />
       <div v-if="passwordError" class="text-red-400 font-mono text-[10px] text-right">
         {{ passwordError }}
@@ -254,7 +265,9 @@ const handleSignup = async () => {
 
     <!-- Confirm Password -->
     <div class="flex flex-col gap-2">
-      <label class="text-green-400 font-bold text-xs tracking-wider">CONFIRM PASSWORD</label>
+      <label class="text-green-400 font-bold text-xs tracking-wider">
+        <PixelText>CONFIRM PASSWORD</PixelText>
+      </label>
       <PixelInput v-model="confirmPassword" type="password" placeholder="********" class="!rounded-lg" />
 
       <div v-if="passwordMatchError" class="text-red-400 font-mono text-[10px] text-right">
@@ -272,8 +285,8 @@ const handleSignup = async () => {
     </div>
 
     <button @click="handleSignup" :disabled="isLoading"
-      class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2">
-      INITIALIZE ID
+      class="w-full h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-sm tracking-widest rounded-xl shadow-lg transform active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center">
+      <PixelText>INITIALIZE ID</PixelText>
     </button>
   </div>
 </template>

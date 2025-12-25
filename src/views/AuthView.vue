@@ -37,13 +37,17 @@ const handleSignupSuccess = () => {
         <div class="flex w-full mb-8 border-b-2 border-zinc-700">
           <button @click="setTab('login')" class="flex-1 pb-4 text-center transition-colors relative"
             :class="activeTab === 'login' ? 'text-white' : 'text-gray-500 hover:text-gray-300'">
-            <span class="tracking-widest text-lg font-bold">LOGIN</span>
+            <div class="tracking-widest text-lg font-bold">
+              <PixelText>LOGIN</PixelText>
+            </div>
             <div v-if="activeTab === 'login'" class="absolute bottom-[-2px] left-0 w-full h-[4px] bg-green-500"></div>
           </button>
 
           <button @click="setTab('signup')" class="flex-1 pb-4 text-center transition-colors relative"
             :class="activeTab === 'signup' ? 'text-white' : 'text-gray-500 hover:text-gray-300'">
-            <span class="tracking-widest text-lg font-bold">SIGN UP</span>
+            <div class="tracking-widest text-lg font-bold">
+              <PixelText>SIGN UP</PixelText>
+            </div>
             <div v-if="activeTab === 'signup'" class="absolute bottom-[-2px] left-0 w-full h-[4px] bg-red-500"></div>
           </button>
         </div>

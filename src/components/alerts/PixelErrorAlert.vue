@@ -9,8 +9,7 @@ defineProps({
 
 <template>
     <!-- Error Variant: Maroon Theme -->
-    <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        @click.self="onCancel">
+    <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
         <div
             class="bg-[#c0c0c0] p-[2px] shadow-[inset_-2px_-2px_#000000,inset_2px_2px_#ffffff] min-w-[350px] max-w-[500px] animate-shake">
             <!-- Title Bar -->
