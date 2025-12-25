@@ -25,31 +25,32 @@ const codeLines = ref([])
 
 const initCodeLines = () => {
   if (authStore.isAuthenticated) {
-    const nick = authStore.user?.nickname || 'Hero'
+    const nick = authStore.user?.nickname || 'Dev'
     codeLines.value = [
-      { text: `const hero = new Hero('${nick}');`, indent: 0 },
+      { text: `const dev = new Developer('${nick}');`, indent: 0 },
       { text: "", indent: 0 },
-      { text: "hero.greet();", indent: 0 },
-      { text: `// Welcome, ${nick}!`, indent: 0 },
+      { text: "if (dev.isReady()) {", indent: 0 },
+      { text: "  await dev.restoreSession();", indent: 1 },
+      { text: "  console.log('Welcome back.');", indent: 1 },
+      { text: "}", indent: 0 },
       { text: "", indent: 0 },
-      { text: "await hero.startAdventure();", indent: 0 },
-      { text: "// Have a nice day!", indent: 0 },
+      { text: "await dev.enterBattlefield();", indent: 0 },
     ]
   } else {
     codeLines.value = [
-      { text: "const christmas = new Holiday('Winter');", indent: 0 },
-      { text: "const tree = new Tree({", indent: 0 },
-      { text: "  type: 'Evergreen',", indent: 1 },
-      { text: "  height: 'Tall',", indent: 1 },
-      { text: "  decoration: true", indent: 1 },
-      { text: "});", indent: 0 },
+      { text: "class Challenger extends Developer {", indent: 0 },
+      { text: "  constructor() {", indent: 1 },
+      { text: "    super();", indent: 2 },
+      { text: "    this.passion = Infinity;", indent: 2 },
+      { text: "  }", indent: 1 },
       { text: "", indent: 0 },
-      { text: "tree.addLights({", indent: 0 },
-      { text: "  color: 'Multi',", indent: 1 },
-      { text: "  mode: 'Twinkle'", indent: 1 },
-      { text: "});", indent: 0 },
+      { text: "  async join() {", indent: 1 },
+      { text: "    await this.connect();", indent: 2 },
+      { text: "  }", indent: 1 },
+      { text: "}", indent: 0 },
       { text: "", indent: 0 },
-      { text: "await tree.build();", indent: 0 },
+      { text: "const newDev = new Challenger();", indent: 0 },
+      { text: "await newDev.join();", indent: 0 },
     ]
   }
 }
@@ -227,7 +228,7 @@ const goToCampaign = () => {
       <div v-if="showTree" class="absolute inset-0 z-10 flex flex-col items-center justify-center">
 
         <div @click="goToCampaign"
-          class="relative scale-[2.2] md:scale-[2.6] cursor-pointer hover:scale-[2.4] md:hover:scale-[2.8] transition-all duration-500 ease-out hover:filter hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+          class="relative scale-[2.0] md:scale-[2.4] mb-12 cursor-pointer hover:scale-[2.2] md:hover:scale-[2.6] transition-all duration-500 ease-out hover:filter hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]"
           title="Start Adventure">
           <div class="grid" :style="{ gridTemplateColumns: `repeat(${TREE_WIDTH}, 0.5rem)`, gap: '1px' }">
             <div v-for="(pixel, i) in pixels" :key="i" class="w-2 h-2 transition-all duration-300"
@@ -281,7 +282,7 @@ div[title="Start Adventure"]:hover .animate-shine {
 }
 
 .fade-editor-leave-active {
-  transition: opacity 1.5s ease;
+  transition: opacity 0.5s ease;
 }
 
 .fade-editor-leave-to {

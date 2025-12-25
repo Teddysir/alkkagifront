@@ -82,11 +82,6 @@ onUnmounted(() => {
                         class="w-1.5 h-1.5 bg-gray-600 group-hover:bg-purple-500 rounded-full transition-colors"></span>
                     <PixelText>CAMPAIGN</PixelText>
                 </button>
-                <a href="#"
-                    class="text-gray-400 hover:text-white transition-colors text-xs font-bold tracking-widest flex items-center gap-1 group">
-                    <span class="w-1.5 h-1.5 bg-gray-600 group-hover:bg-blue-500 rounded-full transition-colors"></span>
-                    <PixelText>NOTICE</PixelText>
-                </a>
             </div>
         </div>
 
@@ -148,7 +143,7 @@ onUnmounted(() => {
                                         <div class="flex justify-between items-center">
                                             <span class="text-[10px] text-gray-500">{{ noti.type }}</span>
                                             <span class="text-[10px] text-gray-600">{{ formatDate(noti.createdAt)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
 
