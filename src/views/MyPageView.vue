@@ -9,6 +9,7 @@ import PendingReviews from '@/components/mypage/PendingReviews.vue'
 import ReceivedReviews from '@/components/mypage/ReceivedReviews.vue'
 import GivenReviews from '@/components/mypage/GivenReviews.vue'
 import MySubmissions from '@/components/mypage/MySubmissions.vue'
+import RecommendedProblems from '@/components/mypage/RecommendedProblems.vue'
 
 const isLoading = ref(true)
 const user = ref({})
@@ -44,13 +45,21 @@ onMounted(() => {
         <CommonHeader />
 
         <div
-            class="relative z-10 flex-1 max-w-[1200px] mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 h-full overflow-hidden">
+            class="relative z-10 flex-1 max-w-[1400px] mx-auto w-full p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8 h-full overflow-hidden">
 
             <!-- LEFT COLUMN: Profile (1) -->
-            <aside class="w-full h-full overflow-y-auto custom-scrollbar">
-                <UserProfile :user="user || {}" @refresh="fetchProfile" />
-                <div v-if="isLoading && !user.nickname" class="mt-4 text-center text-green-500 animate-pulse text-xs">
-                    SYNCING...
+            <div v-if="isLoading && !user.nickname" class="mt-4 text-center text-green-500 animate-pulse text-xs">
+                SYNCING...
+            </div>
+            <aside class="flex flex-col gap-6 w-full h-full overflow-hidden">
+                <!-- User Profile -->
+                <div class="shrink-0">
+                    <UserProfile :user="user || {}" @refresh="fetchProfile" />
+                </div>
+
+                <!-- Recommended Problems -->
+                <div class="flex-1 min-h-0">
+                    <RecommendedProblems />
                 </div>
             </aside>
 

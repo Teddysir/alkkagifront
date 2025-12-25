@@ -14,8 +14,8 @@ const types = [
     { label: '#ALGORITHM', value: 'algorithm' },
     { label: '#STRATEGY', value: 'strategy' },
     { label: '#FAQ', value: 'faq' },
-    { label: '#HINT', value: 'hint' },
-    { label: '#MOTIVATOR', value: 'motivator' },
+    // { label: '#HINT', value: 'hint' },
+    // { label: '#MOTIVATOR', value: 'motivator' },
 ]
 
 const selectType = (val) => {
@@ -59,7 +59,7 @@ const handleSubmit = () => {
                 class="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-purple-600 rounded opacity-50 blur group-hover:opacity-100 transition duration-500 group-hover:duration-200">
             </div>
             <div class="relative flex items-center bg-black rounded p-1">
-                <input v-model="inputPrompt" @keyup.enter="handleSubmit" type="text" placeholder="Ask AI Commander..."
+                <input v-model="inputPrompt" @keyup.enter="handleSubmit" type="text" placeholder="궁금한 점을 바로 질문해 주세요."
                     class="w-full bg-transparent text-white text-sm px-4 py-3 outline-none placeholder-gray-600 font-mono" />
                 <button @click="handleSubmit"
                     class="bg-[#1a1a1a] hover:bg-green-900 border border-gray-700 hover:border-green-500 text-green-500 px-4 py-2 rounded text-xs font-bold transition-colors">

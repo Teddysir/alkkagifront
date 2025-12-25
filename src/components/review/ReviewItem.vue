@@ -162,15 +162,15 @@ const handleDelete = async () => {
                     <!-- Like Button -->
                     <button @click="handleLike"
                         class="flex items-center gap-1 text-gray-400 hover:text-pink-500 transition-colors group/like">
-                        <span class="text-lg group-hover/like:scale-110 transition-transform">♥</span>
-                        <span class="text-sm font-bold">{{ review.likeCount }}</span>
+                        <span class="text-xl group-hover/like:scale-110 transition-transform">♥</span>
+                        <span class="text-m font-bold">{{ review.likeCount }}</span>
                     </button>
                 </div>
             </div>
 
             <!-- Content -->
             <div v-if="!isEditing"
-                class="text-base md:text-lg text-gray-200 whitespace-pre-wrap leading-relaxed mb-3 mt-1 font-sans">
+                class="text-base md:text-m text-gray-200 whitespace-pre-wrap leading-relaxed mb-3 mt-1 font-sans">
                 {{ review.content }}
             </div>
 

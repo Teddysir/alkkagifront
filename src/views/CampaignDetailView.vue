@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCampaignDetail, getCampaignProblems, searchProblems, addCampaignProblems, deleteCampaignProblem, joinCampaign, withdrawCampaign, getCampaignUserStatus } from '@/api/campaign'
+import { getLatestSubmission } from '@/api/submission'
 import { useAuthStore } from '@/stores/auth'
 import { useAlertStore } from '@/stores/alert'
 import CommonHeader from '@/components/CommonHeader.vue'
@@ -229,7 +230,7 @@ const handleDeleteProblem = async (problem = null) => {
     }
 }
 
-const goToSubmission = (item) => {
+const goToSubmission = async (item) => {
     // 1. Check Participation
     if (!campaign.value?.isParticipated && !authStore.isAdmin) {
         alertStore.showAlert('ACCESS DENIED', 'JOIN CAMPAIGN FIRST')
@@ -237,19 +238,32 @@ const goToSubmission = (item) => {
     }
 
     // 2. Check if Active
+    // If submitted, try to view latest submission regardless of status?
+    // User said: "Click card -> My Submission Detail (Latest)"
+
+    if (item.submitted) {
+        try {
+            const res = await getLatestSubmission(item.campaignProblemId)
+            // User provided structure: { message: "...", data: { submissionId: 55, ... } }
+            // API function returns response.data, so `res` is that object.
+            // valid path: res.data.submissionId
+            const submissionData = res.data
+            if (submissionData && submissionData.submissionId) {
+                router.push(`/submission/${submissionData.submissionId}`)
+                return
+            }
+        } catch (e) {
+            console.error("Failed to fetch latest submission", e)
+        }
+    }
+
+    // Fallback: If not submitted or fetch failed, generic check
     const status = getProblemStatus(item.startDate, item.endDate)
     if (status !== 'CURRENT' && !authStore.isAdmin) {
         alertStore.showAlert('ACCESS DENIED', `PROBLEM IS ${status}`)
         return
     }
-    // Navigate
-    // Navigate to Submission Detail (My Submission)
-    if (item.submitted && item.submissionId) {  // Assuming submissionId exists if submitted
-        router.push(`/submission/${item.submissionId}`)
-    } else {
-        // Fallback: Go to Submit Page (New Submission)
-        router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
-    }
+    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
 }
 
 const goToNewSubmission = (item) => {
@@ -268,6 +282,10 @@ const goToNewSubmission = (item) => {
 
     // Always navigate to submission page
     router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/submit`)
+}
+
+const goToStats = (item) => {
+    router.push(`/campaigns/${campaignId}/problems/${item.campaignProblemId}/statistics`)
 }
 
 const goToReview = (item) => {
@@ -424,8 +442,9 @@ watch(problems, async () => {
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col">
                                 <span class="text-[10px] text-gray-500">CAPACITY</span>
-                                <span class="text-xl text-green-400 font-bold font-sans">{{ campaign.capacity }}
-                                    명</span>
+                                <span class="text-xl text-green-400 font-bold font-sans">
+                                    {{ campaign.headCount || 0 }} / {{ campaign.capacity }}
+                                </span>
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-[10px] text-gray-500">STATUS</span>
@@ -526,7 +545,7 @@ watch(problems, async () => {
                                     <div class="absolute top-0 bottom-0 w-1 bg-green-500/50 transition-all duration-300 group-hover:h-full h-0"
                                         :class="idx % 2 === 0 ? 'right-0' : 'left-0'"></div>
 
-                                    <!-- STATUS BAR (Admin Edit & Submitted Badge) -->
+                                    <!-- STATUS BAR (Admin Edit & Submitted Badge & Stats) -->
                                     <div class="absolute top-2 z-30 flex gap-2 items-center"
                                         :class="idx % 2 === 0 ? 'left-2 flex-row' : 'right-2 flex-row-reverse'">
 
@@ -545,6 +564,12 @@ watch(problems, async () => {
                                             class="text-[10px] uppercase font-bold text-black bg-red-500 px-2 py-1 border border-red-400 shadow-[0_0_5px_rgba(222,74,74,0.5)]">
                                             [ NOT SUBMITTED ]
                                         </div>
+
+                                        <!-- STATS BUTTON -->
+                                        <button @click.stop="goToStats(item.data)"
+                                            class="text-[10px] uppercase font-bold text-gray-400 hover:text-white bg-black/80 hover:bg-gray-700 px-2 py-1 border border-gray-600 transition-colors">
+                                            [ STATS ]
+                                        </button>
                                     </div>
 
                                     <div class="flex flex-col gap-1 pt-4">
@@ -741,7 +766,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                        }}</div>
+                                    }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -802,7 +827,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>

@@ -60,6 +60,12 @@ const router = createRouter({
       component: () => import('../views/SubmissionDetailView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/campaigns/:campaignId/problems/:problemId/statistics',
+      name: 'problem-statistics',
+      component: () => import('../views/ProblemStatisticsView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 })
 
