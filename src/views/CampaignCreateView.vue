@@ -5,6 +5,7 @@ import { createCampaign } from '@/api/campaign'
 import PixelText from '@/components/PixelText.vue'
 import CommonHeader from '@/components/CommonHeader.vue'
 import { useAlertStore } from '@/stores/alert'
+import DatePicker from '@/components/ui/DatePicker.vue'
 
 const router = useRouter()
 const alertStore = useAlertStore()
@@ -116,7 +117,7 @@ const handleSubmit = async () => {
                         </label>
                         <input v-model="form.title" type="text"
                             class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none transition-colors font-sans"
-                            placeholder="Enter operation name..." required />
+                            placeholder="캠페인 제목을 입력해주세요." required />
                     </div>
 
                     <!-- Description -->
@@ -126,7 +127,7 @@ const handleSubmit = async () => {
                         </label>
                         <textarea v-model="form.description" rows="4"
                             class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none transition-colors font-sans resize-none"
-                            placeholder="Describe objective..."></textarea>
+                            placeholder="캠페인 설명을 입력해주세요."></textarea>
                     </div>
 
                     <!-- Capacity -->
@@ -144,15 +145,13 @@ const handleSubmit = async () => {
                             <label class="text-xs text-green-400 font-bold block">
                                 <PixelText>START TIME</PixelText>
                             </label>
-                            <input v-model="form.startDate" type="datetime-local" required
-                                class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none font-sans" />
+                            <DatePicker v-model="form.startDate" placeholder="Select start date" />
                         </div>
                         <div class="space-y-2">
                             <label class="text-xs text-green-400 font-bold block">
                                 <PixelText>END TIME</PixelText>
                             </label>
-                            <input v-model="form.endDate" type="datetime-local" required
-                                class="w-full bg-black/50 border border-gray-600 focus:border-green-500 text-white p-3 outline-none font-sans" />
+                            <DatePicker v-model="form.endDate" placeholder="Select end date" />
                         </div>
                     </div>
 

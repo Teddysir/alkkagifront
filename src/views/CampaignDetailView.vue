@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAlertStore } from '@/stores/alert'
 import CommonHeader from '@/components/CommonHeader.vue'
 import PixelText from '@/components/PixelText.vue'
+import DatePicker from '@/components/ui/DatePicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -708,7 +709,7 @@ watch(problems, async () => {
 
                                 <div class="mb-3 pr-8">
                                     <div class="text-[10px] text-gray-500 mb-0.5">{{ p.platformType }} #{{ p.problemNo
-                                    }}</div>
+                                        }}</div>
                                     <h4 class="text-sm text-white font-bold truncate">{{ p.title }}</h4>
                                 </div>
 
@@ -716,13 +717,12 @@ watch(problems, async () => {
                                     <div>
                                         <label class="block text-[9px] text-purple-400 mb-1 font-bold">START
                                             TIME</label>
-                                        <input type="datetime-local" step="1" v-model="newProblemDates[p.id].startDate"
-                                            class="w-full bg-black border border-gray-700 text-white text-xs p-2 focus:border-purple-500 outline-none rounded-sm" />
+                                        <DatePicker v-model="newProblemDates[p.id].startDate"
+                                            placeholder="Select start" />
                                     </div>
                                     <div>
                                         <label class="block text-[9px] text-purple-400 mb-1 font-bold">END TIME</label>
-                                        <input type="datetime-local" step="1" v-model="newProblemDates[p.id].endDate"
-                                            class="w-full bg-black border border-gray-700 text-white text-xs p-2 focus:border-purple-500 outline-none rounded-sm" />
+                                        <DatePicker v-model="newProblemDates[p.id].endDate" placeholder="Select end" />
                                     </div>
                                 </div>
                             </div>
@@ -770,7 +770,7 @@ watch(problems, async () => {
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">START</span>
                             <span class="text-xs text-white">{{ formatDateTime(selectedDetailProblem.startDate)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="p-3 border border-gray-700 bg-black/30">
                             <span class="text-[10px] text-gray-500 block mb-1">DEADLINE</span>
