@@ -88,7 +88,7 @@ onMounted(() => {
                     </div>
 
                     <!-- BOTTOM ROW: Received(3) & Given(4) -->
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-6 flex-1 min-h-0">
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0">
                         <!-- Received Reviews -->
                         <div class="h-full">
                             <ReceivedReviews />
@@ -101,7 +101,7 @@ onMounted(() => {
                 </div>
 
                 <!-- SUBMISSIONS TAB CONTENT -->
-                <div v-else-if="activeTab === 'submissions'" class="flex-1 min-h-0 pb-6 w-full">
+                <div v-else-if="activeTab === 'submissions'" class="flex-1 min-h-0 w-full">
                     <MySubmissions />
                 </div>
 
